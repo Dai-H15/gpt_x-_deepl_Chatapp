@@ -320,7 +320,7 @@ def ask_gpt():
                 print("----------\n ( 警告 ) \n ----------\n設定が無効です。API設定を確認してください\n___________________________\n")
                 continue
             print("talkフォルダーを作成し、会話内容を.txtファイル形式で保存します。\n")
-            os.makedirs("talk")
+            os.makedirs("talk",exist_ok=True)
             while(True):
                 if raw_mode == False:
                     print("rawモードがオフになっています。内容を日本語化してから保存しますか？ yes/no")
