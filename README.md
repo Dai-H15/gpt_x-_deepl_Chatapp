@@ -88,7 +88,7 @@ openai, deepl
 
 使用される際は著作権に注意してください。
 
-Thanks
+
 Dai-H15 
 
 
