@@ -311,7 +311,7 @@ def ask_gpt():
         #その他コマンドを入力された場合にもどる
         
         elif input_type == "help":
-            print("コマンド  \none:一文のみ入力 \nmult:連続入力  \nsave:プロンプトをエクスポートして終了 \nnew:会話を新しくやり直す \info:現在のトークン数を表示する(インポート直後は無効) \nview:会話内容を全表示する \ntranslate:会話内容を日本語化して表示する \nexit:保存せずに終了する \nsettings:詳細設定を表示する\nprint:テキストファイル形式で会話内容を出力します。\n"  )
+            print("コマンド  \none:一文のみ入力 \nmult:連続入力  \nsave:プロンプトをエクスポートして終了 \nnew:会話を新しくやり直す \ninfo:現在のトークン数を表示する(インポート直後は無効) \nview:会話内容を全表示する \ntranslate:会話内容を日本語化して表示する \nexit:保存せずに終了する \nsettings:詳細設定を表示する\nprint:テキストファイル形式で会話内容を出力します。\n"  )
             continue
         
         
