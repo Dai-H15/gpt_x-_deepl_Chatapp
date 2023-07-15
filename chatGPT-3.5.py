@@ -176,7 +176,7 @@ def ask_gpt():
         
         elif input_type == "settings":
             while True:
-                print("\n________________\n\n変更する設定を選んでください\n 1.自動翻訳機能(rawモード)\n 2.API設定\n exit:設定を終了\n ")
+                print("\n________________\n\n変更する設定を選んでください\n 1.自動翻訳機能(rawモード)\n 2.API設定\n 3.初期プロンプトの指定\n exit:設定を終了\n ")
                 u_type =input(">>>")
                 if u_type =="1":
                     print("このプログラムは、ChatGPTにおけるトークン数の消費量削減のために、送信時、受信時に適した状態にする機能が搭載されています。\nしかし、ソースコードを送信する際や、使用しているAPIは自動翻訳のため、意図した回答が得られない状況が発生するおそれがあります。通常はこの機能を有効にしておくことをおすすめしますが、こういった状況に陥った場合にオフにすることも可能です。\n既定の設定では自動翻訳が有効化されているため、rawモードは無効になっています")
@@ -240,7 +240,7 @@ def ask_gpt():
                             continue
                         
                         elif u_api =="exit":
-                            print("設定メニューに戻ります\n")
+                            print("トップメニューに戻ります。\n")
                             break
                         
                         else:
@@ -252,7 +252,29 @@ def ask_gpt():
                 
                         
                             
-                    
+                elif u_type == "3":
+                    print("初めにGPTに渡すプロンプトの内容を変更できます。\n")
+                    u_prompt = input("新しく設定するプロンプトを入力してください。'default'と入力することで初期状態に戻すことができます。\n >>>")
+                    if u_prompt == "default":
+                        messages[0] = {"role": "system", "content": "You are a helpful assistant. Also you are super engineer.You can answer all questions."}
+                        print("初期状態に戻りました。\n")
+                        print("settingsメニューに戻ります。")
+                        continue
+                    else:
+                        print("日本語で入力しましたか?")
+                        u_lang = input("yes/no \n>>>")
+                        if u_lang == "yes":
+                            print("翻訳してから変更されます。\n")
+                            messages[0] = {"role": "system", "content": "{}".format(translator.translate_text(u_prompt, target_lang="EN-US"))}
+
+                        elif u_lang == "no":
+                            messages[0] = {"role": "system", "content": "{}".format(u_prompt)}
+
+                        print("正常に変更されました。\n")
+                        print("settingsメニューに戻ります。")
+                        continue
+                        
+                
                     
                             
                             
