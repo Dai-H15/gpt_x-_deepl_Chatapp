@@ -49,6 +49,9 @@ def ask_gpt():
         except deepl.exceptions.AuthorizationException:
             print(" ----------\n ( 警告 ) \n ----------\nエラー: DeepL API設定が無効です。settingsから指定してください\n")
             error_DeepL = True
+        except ValueError:
+            print(" ----------\n ( 警告 ) \n ----------\nエラー: DeepL API設定が無効です。settingsから指定してください\n")
+            error_DeepL = True
     except openai.error.AuthenticationError:
         print(" ----------\n ( 警告 ) \n ----------\nAPIキーの読み込みに失敗しました。settingsから指定してください。\n")
         print(" ----------\n ( 情報 ) \n ----------\n現在のベースURLは '{}' です\n".format(openai.api_base))
@@ -195,19 +198,29 @@ def ask_gpt():
                             print("gpt-3.5-turboが使用可能です")
                         except openai.error.PermissionError:
                             error_openAI = True
+                            print("openAI にアクセスできません。権限がないAPIキーです")
+                        except openai.error.AuthenticationError:
+                            error_openAI = True
                             print("openAI にアクセスできません。無効なAPIキーです")
+
                         except openai.error.InvalidRequestError:
                             error_openAI = True
                             print("openAI にアクセスできません。不正なURLです")
-                        except openai.error.AuthenticationError:
-                            print("openAI にアクセスできません。URLが無効、もしくはURLとAPIキーの組み合わせが不正です")
+                        except openai.error.APIConnectionError:
+                            print("openAI にアクセスできません。不正なURLです")
+                            error_openAI = True
+                        except openai.error.APIError:
+                            print("openAI にアクセスできません。設定されたURLから無効な応答が返されました。")
                             error_openAI = True
                         try:
                             translator.get_usage().character
                             print("DeepLが使用可能です")
                             error_DeepL = False
                         except deepl.exceptions.AuthorizationException:
-                            print("DeepLにアクセスできません。")
+                            print("DeepLにアクセスできません。無効なDeepLAPIキーが設定されています。")
+                            error_DeepL = True
+                        except ValueError:
+                            print("DeepLにアクセスできません。無効なDeepLAPIキーが設定されています。")
                             error_DeepL = True
                         u_api = input("\n項目を選択してください\n>>>")
 
@@ -227,9 +240,12 @@ def ask_gpt():
                         elif u_api == "3":
                             print("Deepl APIのAPIキーを変更します。")
                             deepl_key = input("APIキーを貼り付けてください\n>>> ")
-                            translator = deepl.Translator(deepl_key)
-                            print("APIキーの変更に成功しました。DeepLを使用した翻訳が可能です。")
-                            continue
+                            try:
+                                translator = deepl.Translator(deepl_key)
+                                print("APIキーの変更に成功しました。DeepLを使用した翻訳が可能です。")
+                                continue
+                            except ValueError:
+                                print("無効なAPIキーです。再度設定し直してください。")
 
                         elif u_api == "exit":
                             print("トップメニューに戻ります。\n")
@@ -261,6 +277,7 @@ def ask_gpt():
                             messages[0] = {"role": "system", "content": "{}".format(u_prompt)}
 
                         print("正常に変更されました。\n")
+                        print("現在の初期プロンプトは、'{}'\n".format(messages[0]["content"]))
                         print("settingsメニューに戻ります。")
                         continue
 
