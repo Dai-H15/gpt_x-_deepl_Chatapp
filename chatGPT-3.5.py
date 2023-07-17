@@ -26,6 +26,7 @@ def ask_gpt():
     user_question = ""
     total = 0
     raw_mode = False
+    translator = deepl.Translator("any")
 
     try:
 
@@ -41,7 +42,12 @@ def ask_gpt():
         except openai.error.AuthenticationError:
             print(" ----------\n ( 警告 ) \n ----------\nエラー: openAI API設定が無効です。settingsから指定してください\n")
             error_openAI = True
-
+        except openai.error.PermissionError:
+            print(" ----------\n ( 警告 ) \n ----------\nエラー: openAI API設定が無効です。settingsから指定してください\n")
+            error_openAI = True
+        except openai.error.InvalidRequestError:
+            print(" ----------\n ( 警告 ) \n ----------\nエラー: openAI API設定が無効です。settingsから指定してください\n")
+            error_openAI = True
         try:
             translator.get_usage().character
             print("DeepL APIの読み込みに成功しました。DeepLによる自動翻訳が使用可能です。\n")
@@ -57,7 +63,10 @@ def ask_gpt():
         print(" ----------\n ( 情報 ) \n ----------\n現在のベースURLは '{}' です\n".format(openai.api_base))
         error_openAI = True
         error_DeepL = True
-
+    except ImportError:
+        print(" ----------\n ( 警告 ) \n ----------\nエラー: api_keysの書式が不正な可能性があります。各APIキーをsettingsから指定してください")
+        error_openAI = True
+        error_DeepL = True
     # 会話内容のインポート
     import_ans = input("今までの会話内容をインポートしますか？ :yes/no  :")
 
@@ -201,7 +210,7 @@ def ask_gpt():
                             print("openAI にアクセスできません。権限がないAPIキーです")
                         except openai.error.AuthenticationError:
                             error_openAI = True
-                            print("openAI にアクセスできません。無効なAPIキーです")
+                            print("openAI にアクセスできません。無効なAPIキー、もしくはURLとの組み合わせが無効です")
 
                         except openai.error.InvalidRequestError:
                             error_openAI = True
