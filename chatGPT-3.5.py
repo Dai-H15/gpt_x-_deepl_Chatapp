@@ -18,7 +18,7 @@ def import_prompt():
 
 
 def ask_gpt():
-    print("____________________\n\nコマンドプロンプト上で簡単にChatGPTの操作ができるしトークン数の節約をしながら記憶の半永久保存も簡単にできるくん ver.6.8.0 \n\nmade_by :Dai-H15  s1f102200828@iniad.org\n____________________\n")
+    print("____________________\n\nコマンドプロンプト上で簡単にChatGPTの操作ができるしトークン数の節約をしながら記憶の半永久保存も簡単にできるくん ver.6.8.5 \n\nmade_by :Dai-H15  s1f102200828@iniad.org\n____________________\n")
 
     # 初期化
     question = ""
@@ -352,13 +352,14 @@ def ask_gpt():
                 if raw_mode is False:
                     print("rawモードがオフになっています。内容を日本語化してから保存しますか？ yes/no")
                     tra_set = input("\n>>>")
+                    if (tra_set != "yes") and (tra_set != "no"):
+                        print("想定外の入力が発生しました\n")
+                        continue
                 else:
                     print("rawモードが有効化されています。自動翻訳は使用できません。\n")
                     tra_set = "no"
-                    if tra_set not in ["yes", "no"]:
-                        print("想定外の入力が発生しました\n")
-                        break
-                    print("設定を保存しました。")
+
+                print("設定を保存しました。")
 
                 filename = input("ファイル名を指定してください : ")
                 if filename == "":
