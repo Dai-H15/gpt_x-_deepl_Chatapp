@@ -18,7 +18,7 @@ def import_prompt():
 
 
 def ask_gpt():
-    print("____________________\n\nコマンドプロンプト上で簡単にChatGPTの操作ができるしトークン数の節約をしながら記憶の半永久保存も簡単にできるくん ver.6.8.5 \n\nmade_by :Dai-H15  s1f102200828@iniad.org\n____________________\n")
+    print("____________________\n\nコマンドプロンプト上で簡単にChatGPTの操作ができるしトークン数の節約をしながら記憶の半永久保存も簡単にできるくん ver.6.9 \n\nmade_by :Dai-H15  s1f102200828@iniad.org\n____________________\n")
 
     # 初期化
     question = ""
@@ -27,6 +27,7 @@ def ask_gpt():
     total = 0
     raw_mode = False
     translator = deepl.Translator("any")
+    end = 0
 
     try:
 
@@ -139,14 +140,31 @@ def ask_gpt():
             if (error_openAI or error_DeepL) is True:
                 print("----------\n ( 警告 ) \n ----------\n設定が無効です。API設定を確認してください\n___________________________\n")
                 continue
-            while user_question != "end":
+            while end == 0:
+                user_question = input("質問を入力してください(end)で入力終了,exitでプログラムを終了: ")
                 if user_question == "exit":
                     print("\n")
                     user_question = ""
-                    break
-                question += (user_question+" \n ")
-                user_question = input("質問を入力してください(end)で入力終了,exitでプログラムを終了: ")
-            continue
+                    end = 1
+                if user_question == "end":
+                    end = 1
+                    user_question = ""
+                if raw_mode is True:
+                    print("rawモードがオンです。")
+                    question += (user_question+" \n ")
+                    user_question = ""
+                    continue
+                if raw_mode is False:
+                    if user_question == "":
+                        continue
+                    print("rawモードはオフです。\n翻訳中...")
+                    tra_q = translator.translate_text(user_question, target_lang="JA")
+                    question += str(tra_q)
+                    user_question = ""
+                    continue
+            user_question = ""
+            end = 0
+
 
         # 会話内容のエクスポート
 
