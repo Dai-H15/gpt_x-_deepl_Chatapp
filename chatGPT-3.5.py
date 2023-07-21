@@ -18,7 +18,7 @@ def import_prompt():
 
 
 def ask_gpt():
-    print("____________________\n\nコマンドプロンプト上で簡単にChatGPTの操作ができるしトークン数の節約をしながら記憶の半永久保存も簡単にできるくん ver.6.9 \n\nmade_by :Dai-H15  s1f102200828@iniad.org\n____________________\n")
+    print("____________________\n\nコマンドプロンプト上で簡単にChatGPTの操作ができるしトークン数の節約をしながら記憶の半永久保存も簡単にできるくん ver.6.9.1 \n\nmade_by :Dai-H15  s1f102200828@iniad.org\n____________________\n")
 
     # 初期化
     question = ""
@@ -124,6 +124,9 @@ def ask_gpt():
                 print("----------\n ( 警告 ) \n ----------\n設定が無効です。API設定を確認してください\n___________________________\n")
                 continue
             user_question = input("質問を入力してください  exitでコマンド入力に戻る: ")
+            if user_question == "":
+                print("内容を確認できませんでした。\n")
+                continue
             if user_question == "exit":
                 user_question = ""
                 print("\n")
@@ -218,7 +221,7 @@ def ask_gpt():
 
                 elif u_type == "2":
                     while True:
-                        print("\n________________\n\nAPI設定メニュー\n\n1: openai.api_keyの変更\n2: openai.api_baseの変更\n3: deeplAPIキーの変更 \nexit: 設定メニューにもどる\n")
+                        print("\n________________\n\nAPI設定メニュー\n\n1: openai.api_keyの変更\n2: openai.api_baseの変更\n3: DeepLAPIキーの変更 \nexit: 設定メニューにもどる\n")
                         try:
                             openai.Model.retrieve("gpt-3.5-turbo")
                             error_openAI = False
