@@ -161,7 +161,7 @@ def ask_gpt():
                     if user_question == "":
                         continue
                     print("rawモードはオフです。\n翻訳中...")
-                    tra_q = translator.translate_text(user_question, target_lang="JA")
+                    tra_q = translator.translate_text(user_question, target_lang="EN-US")
                     question += str(tra_q)
                     user_question = ""
                     continue
