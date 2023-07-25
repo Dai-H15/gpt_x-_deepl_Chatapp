@@ -18,7 +18,7 @@ def import_prompt():
 
 
 def ask_gpt():
-    print("____________________\n\nコマンドプロンプト上で簡単にChatGPTの操作ができるしトークン数の節約をしながら記憶の半永久保存も簡単にできるくん ver.6.9.1 \n\nmade_by :Dai-H15  s1f102200828@iniad.org\n____________________\n")
+    print("____________________\n\nコマンドプロンプト上で簡単にChatGPTの操作ができるしトークン数の節約をしながら記憶の半永久保存も簡単にできるくん ver.6.9.2 \n\nmade_by :Dai-H15  s1f102200828@iniad.org\n____________________\n")
 
     # 初期化
     question = ""
@@ -161,7 +161,7 @@ def ask_gpt():
                     if user_question == "":
                         continue
                     print("rawモードはオフです。\n翻訳中...")
-                    tra_q = translator.translate_text(user_question, target_lang="JA")
+                    tra_q = translator.translate_text(user_question, target_lang="EN-US")
                     question += str(tra_q)
                     user_question = ""
                     continue
