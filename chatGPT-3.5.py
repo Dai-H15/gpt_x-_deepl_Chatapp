@@ -3,7 +3,8 @@ import json
 import os
 import deepl
 
-def init(): #初期化
+
+def init():  # 初期化
     print("初期化を開始します。\n")
     question = ""
     messages = [{"role": "system", "content": "You are a helpful assistant. Also you are super engineer.You can answer all questions."}]
@@ -11,7 +12,7 @@ def init(): #初期化
     raw_mode = False
     translator = deepl.Translator("any")
     error = 0
-    
+
     try:
         from api_keys import set_apikey
         print("api_keysを検出しました。APIキーを読み込みます。\n")
@@ -82,8 +83,7 @@ def init(): #初期化
         print("想定外の内容が入力されました")
         error = 1
     print("処理が完了しました。\n")
-    return question, messages,total,raw_mode,translator,error_openAI,error_DeepL,error
-
+    return question, messages, total, raw_mode, translator, error_openAI, error_DeepL, error
 
 
 def export_prompt(prompt):
@@ -99,22 +99,21 @@ def import_prompt():
         raise FileNotFoundError("プロンプトファイルが存在しません")
 
 
-
-def one(error_openAI,error_DeepL,raw_mode,translator,question):
+def one(error_openAI, error_DeepL, raw_mode, translator, question):
     error = 0
     if (error_openAI or error_DeepL) is True:
         print("----------\n ( 警告 ) \n ----------\n設定が無効です。API設定を確認してください\n___________________________\n")
         error = 1
-        return question,error
-        
+        return question, error
+
     user_question = input("質問を入力してください  exitでコマンド入力に戻る: ")
     if user_question == "":
         print("内容を確認できませんでした。\n")
-        error =1
+        error = 1
     if user_question == "exit":
         user_question = ""
         print("\n")
-        
+
     else:
         if raw_mode is False:
             question = translator.translate_text(user_question, target_lang="EN-US")
@@ -122,17 +121,17 @@ def one(error_openAI,error_DeepL,raw_mode,translator,question):
         else:
             question = user_question
             print("rawモードが有効です")
-            
-    return question,error
 
-    
-def mult(error_openAI,error_DeepL,raw_mode,translator,question):  
-    error = 0      
+    return question, error
+
+
+def mult(error_openAI, error_DeepL, raw_mode, translator, question):
+    error = 0
     end = 0
     if (error_openAI or error_DeepL) is True:
         print("----------\n ( 警告 ) \n ----------\n設定が無効です。API設定を確認してください\n___________________________\n")
         error = 1
-        return question ,error
+        return question, error
     while end == 0:
         user_question = input("質問を入力してください(end)で入力終了,exitでプログラムを終了: ")
         if user_question == "exit":
@@ -156,17 +155,17 @@ def mult(error_openAI,error_DeepL,raw_mode,translator,question):
             user_question = ""
             continue
     user_question = ""
-    if end ==2:
+    if end == 2:
         print("コマンド入力画面に移行します\n")
         end = 0
         error = 1
-        return question,error
+        return question, error
     else:
         end = 0
-        return question,error
+        return question, error
 
 
-def save(raw_mode,messages):
+def save(raw_mode, messages):
     print("会話内容をファイルにエクスポートします。次回以降にインポートすることで会話を続けることができます。\n")
     if raw_mode is False:
 
@@ -175,20 +174,18 @@ def save(raw_mode,messages):
         print("----------\n ( 警告 ) \n ----------\nrawモードが有効化されています。次回以降の動作時に詳細設定からrawモードを有効化する必要があります。\n")
         export_prompt(messages[1:])
     print("完了しました。")
-    
-    
-def info(error_openAI,error_DeepL,translator,total):
+
+
+def info(error_openAI, error_DeepL, translator, total):
     if (error_openAI or error_DeepL) is True:
-            print("----------\n ( 警告 ) \n ----------\n設定が無効です。API設定を確認してください\n___________________________\n")
-            return
+        print("----------\n ( 警告 ) \n ----------\n設定が無効です。API設定を確認してください\n___________________________\n")
+        return
     print("現在消費しているトークン数：{}/4097  使用率: {} % \n".format(total, round(total/4097, 3)*100))
     x = translator.get_usage().character
     print("DeepLアカウントの使用状況: {}/{} 使用率:  {} % \n".format(x.count, x.limit, round(x.count/x.limit*100, 2)))
-            
-    
 
 
-def settings(error_openAI,error_DeepL,raw_mode,translator,messages):
+def settings(error_openAI, error_DeepL, raw_mode, translator, messages):
     while True:
         print("\n________________\n\n変更する設定を選んでください\n 1.自動翻訳機能(rawモード)\n 2.API設定\n 3.初期プロンプトの指定\n exit:設定を終了\n ")
         u_type = input(">>>")
@@ -305,7 +302,7 @@ def settings(error_openAI,error_DeepL,raw_mode,translator,messages):
             break
         else:
             print("予期しない入力がされました。\n")
-    return error_openAI,error_DeepL,raw_mode,translator,messages
+    return error_openAI, error_DeepL, raw_mode, translator, messages
 
 
 def view(messages):
@@ -318,7 +315,7 @@ def view(messages):
     print("\n")
 
 
-def translate(error_openAI,error_DeepL,raw_mode,translator,messages):
+def translate(error_openAI, error_DeepL, raw_mode, translator, messages):
     if (error_openAI or error_DeepL) is True:
         print("----------\n ( 警告 ) \n ----------\n設定が無効です。API設定を確認してください\n___________________________\n")
         return
@@ -346,7 +343,7 @@ def translate(error_openAI,error_DeepL,raw_mode,translator,messages):
         return
 
 
-def print_talk(error_openAI,error_DeepL,raw_mode,translator,messages):
+def print_talk(error_openAI, error_DeepL, raw_mode, translator, messages):
     if (error_openAI or error_DeepL) is True:
         print("----------\n ( 警告 ) \n ----------\n設定が無効です。API設定を確認してください\n___________________________\n")
         return
@@ -388,10 +385,9 @@ def print_talk(error_openAI,error_DeepL,raw_mode,translator,messages):
                 break
 
     print("コマンド入力画面に戻ります。")
-    
 
 
-def make_answer(raw_mode,translator,messages,question):
+def make_answer(raw_mode, translator, messages, question):
     print("ただいま考え中～\n")
     messages.append({"role": "user", "content": f"{question}"})
     response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=messages)
@@ -405,27 +401,24 @@ def make_answer(raw_mode,translator,messages,question):
 
     print("ok!")
 
-    messages.append({"role": response['choices'][0]['message']['role'],
-                        "content": response['choices'][0]['message']['content']})
-    
+    messages.append({"role": response['choices'][0]['message']['role'], "content": response['choices'][0]['message']['content']})
+
     print("________________________________________________________________________________________________\n")
     print("A:\n", result)
 
     print("________________________________________________________________________________________________\n")
     total = response['usage']["total_tokens"]
-    return messages,total
+    return messages, total
 
 
 def ask_gpt():
     print("____________________\n\nコマンドプロンプト上で簡単にChatGPTの操作ができるしトークン数の節約をしながら記憶の半永久保存も簡単にできるくん ver.7.0.0 \n\nmade_by :Dai-H15  s1f102200828@iniad.org\n____________________\n")
 
     # 初期化
-    question, messages,total,raw_mode,translator,error_openAI,error_DeepL,error = init()
+    question, messages, total, raw_mode, translator, error_openAI, error_DeepL, error = init()
     if error == 1:
         print("プログラムを終了します。")
         return
-
-
     print("________________________________________________________________________________________________\n")
 
     # 会話生成本体
@@ -446,13 +439,13 @@ def ask_gpt():
 
         # 1行のみ質問を入力
         if input_type == "one":
-            question,error = one(error_openAI,error_DeepL,raw_mode,translator,question)
-            if error ==1:
+            question, error = one(error_openAI, error_DeepL, raw_mode, translator, question)
+            if error == 1:
                 error = 0
                 continue
         # 複数行の質問の入力。実際は繋げてるだけ
         elif input_type == "mult":
-            question,error = mult(error_openAI,error_DeepL,raw_mode,translator,question)
+            question, error = mult(error_openAI, error_DeepL, raw_mode, translator, question)
             if error == 1:
                 error = 0
                 continue
@@ -460,7 +453,7 @@ def ask_gpt():
         # 会話内容のエクスポート
 
         elif input_type == "save":
-            save(raw_mode,messages)
+            save(raw_mode, messages)
             continue
             # 会話内容を初期化
 
@@ -471,11 +464,11 @@ def ask_gpt():
             continue
 
         elif input_type == "info":
-            info(error_openAI,error_DeepL,translator,total)
+            info(error_openAI, error_DeepL, translator, total)
             continue
 
         elif input_type == "settings":
-            error_openAI,error_DeepL,raw_mode,translator,messages = settings(error_openAI,error_DeepL,raw_mode,translator,messages)
+            error_openAI, error_DeepL, raw_mode, translator, messages = settings(error_openAI, error_DeepL, raw_mode, translator, messages)
             continue
 
         elif input_type == "view":
@@ -483,7 +476,7 @@ def ask_gpt():
             continue
 
         elif input_type == "translate":
-            translate(error_openAI,error_DeepL,raw_mode,translator,messages)
+            translate(error_openAI, error_DeepL, raw_mode, translator, messages)
             continue
 
         elif input_type == "exit":
@@ -496,17 +489,15 @@ def ask_gpt():
             continue
 
         elif input_type == "print":
-            print_talk(error_openAI,error_DeepL,raw_mode,translator,messages)
+            print_talk(error_openAI, error_DeepL, raw_mode, translator, messages)
             continue
-        
+
         else:
             print("正しいコマンドを入力してください  help でコマンド例を表示\n")
             continue
-        # 質問内容に"exit"と入力された場合にも終了させる
-
 
         # 回答を生成・表示
-        messages,total =make_answer(raw_mode,translator,messages,question)
+        messages, total = make_answer(raw_mode, translator, messages, question)
         continue
 
 
