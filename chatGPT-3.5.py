@@ -148,7 +148,7 @@ def ask_gpt():
                 if user_question == "exit":
                     print("\n")
                     user_question = ""
-                    end = 1
+                    end = 2
                 if user_question == "end":
                     end = 1
                     user_question = ""
@@ -166,7 +166,12 @@ def ask_gpt():
                     user_question = ""
                     continue
             user_question = ""
-            end = 0
+            if end ==2:
+                print("コマンド入力画面に移行します\n")
+                end = 0
+                continue
+            else:
+                end = 0
 
 
         # 会話内容のエクスポート
