@@ -55,8 +55,13 @@ def init():  # 初期化
     import_ans = input("今までの会話内容をインポートしますか？ :yes/no  :")
 
     if import_ans == "yes":
+        while True:
+            import_ans_num = input("インポートするデータの番号を入力してください。(1~3)\n ==>")
+            if 1 <= int(import_ans_num) <= 3:
+                break
+            print("番号が範囲外です。")
         try:
-            prompt = import_prompt()
+            prompt = import_prompt(import_ans_num)
 
             # 以前の会話内容の表示
             if input("プロンプトをインポートしました。以前の会話内容を表示しますか？ :yes/no :") == "yes":
@@ -86,14 +91,14 @@ def init():  # 初期化
     return question, messages, total, raw_mode, translator, error_openAI, error_DeepL, error
 
 
-def export_prompt(prompt):
-    with open('prompt.data', 'w') as f:
+def export_prompt(prompt, export_ans_num):
+    with open('prompt_' + export_ans_num + '.data', 'w') as f:
         json.dump(prompt, f)
 
 
-def import_prompt():
-    if os.path.exists('prompt.data'):
-        with open('prompt.data', 'r') as f:
+def import_prompt(num):
+    if os.path.exists('prompt_' + num + '.data'):
+        with open('prompt_' + num + '.data', 'r') as f:
             return json.load(f)
     else:
         raise FileNotFoundError("プロンプトファイルが存在しません")
@@ -167,12 +172,18 @@ def mult(error_openAI, error_DeepL, raw_mode, translator, question):
 
 def save(raw_mode, messages):
     print("会話内容をファイルにエクスポートします。次回以降にインポートすることで会話を続けることができます。\n")
+    while True:
+        export_num = input("保存するスロットを選択してください。(1~3) \n ==>")
+        if 1 <= int(export_num) <= 3:
+            break
+        else:
+            print("範囲外の数値が入力されました。")
     if raw_mode is False:
 
-        export_prompt(messages[1:])
+        export_prompt(messages[1:], export_num)
     else:
         print("----------\n ( 警告 ) \n ----------\nrawモードが有効化されています。次回以降の動作時に詳細設定からrawモードを有効化する必要があります。\n")
-        export_prompt(messages[1:])
+        export_prompt(messages[1:], export_num)
     print("完了しました。")
 
 
@@ -283,7 +294,7 @@ def settings(error_openAI, error_DeepL, raw_mode, translator, messages):
                 continue
 
             else:
-                print("日本語で入力しましたか?")
+                print("英語に翻訳しますか?")
                 u_lang = input("yes/no \n>>>")
                 if u_lang == "yes":
                     print("翻訳してから変更されます。\n")
@@ -368,7 +379,7 @@ def print_talk(error_openAI, error_DeepL, raw_mode, translator, messages):
         else:
 
             with open("./talk/{}.txt".format(filename), "w") as f:
-                for message in messages[1:]:
+                for message in messages:
                     print("書き込み中～\n")
                     f.write("________________________________________________________________________________________________\n")
                     f.write("Role : {}\n".format(message["role"]))
@@ -412,7 +423,7 @@ def make_answer(raw_mode, translator, messages, question):
 
 
 def ask_gpt():
-    print("____________________\n\nコマンドプロンプト上で簡単にChatGPTの操作ができるしトークン数の節約をしながら記憶の半永久保存も簡単にできるくん ver.7.0.0 \n\nmade_by :Dai-H15  s1f102200828@iniad.org\n____________________\n")
+    print("____________________\n\nコマンドプロンプト上で簡単にChatGPTの操作ができるしトークン数の節約をしながら記憶の半永久保存も簡単にできるくん ver.7.1.0 \n\nmade_by :Dai-H15  s1f102200828@iniad.org\n____________________\n")
 
     # 初期化
     question, messages, total, raw_mode, translator, error_openAI, error_DeepL, error = init()
