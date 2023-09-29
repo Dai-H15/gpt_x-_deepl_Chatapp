@@ -58,9 +58,13 @@ def init():  # 初期化
         if import_ans == "yes":
             while True:
                 import_ans_num = input("インポートするデータの番号を入力してください。(1~3)\n ==>")
-                if 1 <= int(import_ans_num) <= 3:
-                    break
-                print("番号が範囲外です。")
+                try:
+                    if 1 <= int(import_ans_num) <= 3:
+                        break
+                    print("番号が範囲外です。")
+                except ValueError:
+                    print("正しく入力してください。")
+                    continue
 
             try:
                 prompt = import_prompt(import_ans_num)
@@ -431,7 +435,7 @@ def make_answer(raw_mode, translator, messages, question):
 
 
 def ask_gpt():
-    print("____________________\n\nコマンドプロンプト上で簡単にChatGPTの操作ができるしトークン数の節約をしながら記憶の半永久保存も簡単にできるくん ver.7.2.0 \n\nmade_by :Dai-H15  s1f102200828@iniad.org\n____________________\n")
+    print("____________________\n\nコマンドプロンプト上で簡単にChatGPTの操作ができるしトークン数の節約をしながら記憶の半永久保存も簡単にできるくん ver.7.2.2 \n\nmade_by :Dai-H15  s1f102200828@iniad.org\n____________________\n")
 
     # 初期化
     question, messages, total, raw_mode, translator, error_openAI, error_DeepL, error = init()
@@ -504,7 +508,7 @@ def ask_gpt():
         # その他コマンドを入力された場合にもどる
 
         elif input_type == "help":
-            print("コマンド  \none:一文のみ入力 \nmult:連続入力  \nsave:プロンプトをエクスポートして終了 \nnew:会話を新しくやり直す \ninfo:現在のトークン数を表示する(インポート直後は無効) \nview:会話内容を全表示する \ntranslate:会話内容を日本語化して表示する \nexit:保存せずに終了する \nreload:アプリを再起動 \nsettings:詳細設定を表示する\nprint:テキストファイル形式で会話内容を出力します。\n")
+            print("コマンド  \none:一文のみ入力 \nmult:連続入力  \nsave:プロンプトをエクスポートして終了 \nnew:会話を新しくやり直す \ninfo:現在のトークン数を表示(インポート直後は無効) \nview:会話内容を全表示 \ntranslate:会話内容を日本語化して表示 \nexit:保存せずに終了 \nreload:アプリを再起動 \nsettings:詳細設定を表示 \nprint:テキストファイル形式で会話内容を出力\n ")
             continue
 
         elif input_type == "print":
@@ -514,6 +518,8 @@ def ask_gpt():
         elif input_type == "reload":
             print("再度読み込み直します。保存されていない情報は消えますがよろしいですか？(yes / no )\n")
             if input("==>") == "yes":
+                for _ in range(50):
+                    print("\n")
                 question, messages, total, raw_mode, translator, error_openAI, error_DeepL, error = init()
                 continue
             else:
