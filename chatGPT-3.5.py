@@ -129,7 +129,8 @@ def one(error_openAI, error_DeepL, raw_mode, translator, question):
         error = 1
     if user_question == "exit":
         user_question = ""
-        print("\n")
+        print("コマンド入力画面に戻ります\n")
+        error = 1
 
     else:
         if raw_mode is False:
