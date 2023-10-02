@@ -12,6 +12,11 @@ def init():  # 初期化
     raw_mode = False
     translator = deepl.Translator("any")
     error = 0
+    using_model = "gpt-3.5-turbo"
+    models = []
+    max_token = 4096
+    finish_reason = ""
+    EOT = False
 
     try:
         from api_keys import set_apikey
@@ -20,17 +25,22 @@ def init():  # 初期化
         try:
             openai.Model.retrieve("gpt-3.5-turbo")
             print("openAI APIの読み込みに成功しました。gpt-3.5-turboが使用可能です。\n")
+            models.append(using_model)
             print("現在のベースURLは '{}' です\n".format(openai.api_base))
             error_openAI = False
 
         except openai.error.AuthenticationError:
             print(" ----------\n ( 警告 ) \n ----------\nエラー: openAI API設定が無効です。(AuthenticationError)\nsettingsから指定してください\n")
+            print(" ----------\n ( 情報 ) \n ----------\n現在のベースURLは '{}' です\n".format(openai.api_base))
             error_openAI = True
         except openai.error.PermissionError:
             print(" ----------\n ( 警告 ) \n ----------\nエラー: openAI API設定が無効です。(PermissionError)\nsettingsから指定してください\n")
             error_openAI = True
         except openai.error.InvalidRequestError:
             print(" ----------\n ( 警告 ) \n ----------\nエラー: openAI API設定が無効です。(InvalidRequestError)\nsettingsから指定してください\n")
+            error_openAI = True
+        except openai.error.APIConnectionError:
+            print(" ----------\n ( 警告 ) \n ----------\nエラー: openAI APIにアクセスできません。(APiconnectionError)\nsettingsから指定してください\n")
             error_openAI = True
         try:
             translator.get_usage().character
@@ -42,6 +52,10 @@ def init():  # 初期化
         except ValueError:
             print(" ----------\n ( 警告 ) \n ----------\nエラー: DeepL API設定が無効です。settingsから指定してください\n")
             error_DeepL = True
+        except deepl.exceptions.ConnectionException:
+            print(" ----------\n ( 警告 ) \n ----------\nエラー: DeepLにアクセスできません。接続が無効、もしくはホストがダウンしています。")
+            error_DeepL = True
+            
     except openai.error.AuthenticationError:
         print(" ----------\n ( 警告 ) \n ----------\nAPIキーの読み込みに失敗しました。settingsから指定してください。\n")
         print(" ----------\n ( 情報 ) \n ----------\n現在のベースURLは '{}' です\n".format(openai.api_base))
@@ -84,7 +98,7 @@ def init():  # 初期化
                 elif another_prompt == "no":
                     for p in prompt:
                         messages.append(p)
-                    return question, messages, total, raw_mode, translator, error_openAI, error_DeepL, error
+                    return question, messages, total, raw_mode, translator, error_openAI, error_DeepL, error, using_model, models, max_token, finish_reason, EOT
                 else:
                     print("正しく入力してください。")
                     continue
@@ -100,7 +114,7 @@ def init():  # 初期化
             print("想定外の内容が入力されました")
             error = 1
         print("処理が完了しました。\n")
-        return question, messages, total, raw_mode, translator, error_openAI, error_DeepL, error
+        return question, messages, total, raw_mode, translator, error_openAI, error_DeepL, error, using_model, models, max_token, finish_reason, EOT
 
 
 def export_prompt(prompt, export_ans_num):
@@ -116,10 +130,14 @@ def import_prompt(num):
         raise FileNotFoundError("プロンプトファイルが存在しません")
 
 
-def one(error_openAI, error_DeepL, raw_mode, translator, question):
+def one(error_openAI, error_DeepL, EOT, raw_mode, translator, question):
     error = 0
     if (error_openAI or error_DeepL) is True:
         print("----------\n ( 警告 ) \n ----------\n設定が無効です。API設定を確認してください\n___________________________\n")
+        error = 1
+        return question, error
+    if EOT:
+        print("----------\n ( 情報 ) \n ----------\nトークン数の上限に達しました。新規内容から開始してください。\nまた、printコマンドから内容の書き出しを利用できます。\n")
         error = 1
         return question, error
 
@@ -143,13 +161,19 @@ def one(error_openAI, error_DeepL, raw_mode, translator, question):
     return question, error
 
 
-def mult(error_openAI, error_DeepL, raw_mode, translator, question):
+def mult(error_openAI, error_DeepL, EOT, raw_mode, translator, question):
     error = 0
     end = 0
     if (error_openAI or error_DeepL) is True:
         print("----------\n ( 警告 ) \n ----------\n設定が無効です。API設定を確認してください\n___________________________\n")
         error = 1
         return question, error
+    
+    if EOT:
+        print("----------\n ( 情報 ) \n ----------\nトークン数の上限に達しました。新規内容から開始してください。\nまた、printコマンドから内容の書き出しを利用できます。\n")
+        error = 1
+        return question, error
+    
     while end == 0:
         user_question = input("質問を入力してください(end)で入力終了,exitでプログラムを終了: ")
         if user_question == "exit":
@@ -183,7 +207,10 @@ def mult(error_openAI, error_DeepL, raw_mode, translator, question):
         return question, error
 
 
-def save(raw_mode, messages):
+def save(raw_mode, messages, EOT):
+    if EOT:
+        print("----------\n ( 情報 ) \n ----------\nトークン数の上限に達しました。プロンプトを保存できません。printコマンドから内容の書き出しを行ってください。")
+        return
     print("会話内容をファイルにエクスポートします。次回以降にインポートすることで会話を続けることができます。\n")
     while True:
         export_num = input("保存するスロットを選択してください。(1~3) \n ==>")
@@ -200,16 +227,16 @@ def save(raw_mode, messages):
     print("完了しました。")
 
 
-def info(error_openAI, error_DeepL, translator, total):
+def info(error_openAI, error_DeepL, translator, total, max_token):
     if (error_openAI or error_DeepL) is True:
         print("----------\n ( 警告 ) \n ----------\n設定が無効です。API設定を確認してください\n___________________________\n")
         return
-    print("現在消費しているトークン数：{}/4097  使用率: {} % \n".format(total, round(total/4097, 3)*100))
+    print("現在消費しているトークン数：{}/{}  使用率: {} % \n".format(total, max_token, round(total/max_token, 3)*100))
     x = translator.get_usage().character
     print("DeepLアカウントの使用状況: {}/{} 使用率:  {} % \n".format(x.count, x.limit, round(x.count/x.limit*100, 2)))
 
 
-def settings(error_openAI, error_DeepL, raw_mode, translator, messages):
+def settings(error_openAI, error_DeepL, raw_mode, translator, messages, using_model, models, max_token):
     while True:
         print("\n________________\n\n変更する設定を選んでください\n 1.自動翻訳機能(rawモード)\n 2.API設定\n 3.初期プロンプトの指定\n exit:設定を終了\n ")
         u_type = input(">>>")
@@ -231,26 +258,31 @@ def settings(error_openAI, error_DeepL, raw_mode, translator, messages):
 
         elif u_type == "2":
             while True:
-                print("\n________________\n\nAPI設定メニュー\n\n1: openai.api_keyの変更\n2: openai.api_baseの変更\n3: DeepLAPIキーの変更 \nexit: 設定メニューにもどる\n")
+                print("\n________________\n\nAPI設定メニュー\n\n1: openai.api_keyの変更\n2: openai.api_baseの変更\n3: 使用するモデルの変更\n4: DeepLAPIキーの変更 \nexit: 設定メニューにもどる\n")
                 try:
-                    openai.Model.retrieve("gpt-3.5-turbo")
+                    openai.Model.retrieve(using_model)
                     error_openAI = False
-                    print("gpt-3.5-turboが使用可能です")
+                    print(using_model + "が使用可能です")
                 except openai.error.PermissionError:
                     error_openAI = True
                     print("openAI にアクセスできません。権限がないAPIキーです")
                 except openai.error.AuthenticationError:
                     error_openAI = True
                     print("openAI にアクセスできません。無効なAPIキー、もしくはURLとの組み合わせが無効です")
-
                 except openai.error.InvalidRequestError:
                     error_openAI = True
-                    print("openAI にアクセスできません。不正なURLです")
+                    print("openAI にアクセスできません。不正なURL、もしくは無効なモデルが選択されています")
                 except openai.error.APIConnectionError:
-                    print("openAI にアクセスできません。不正なURLです")
+                    print("openAI にアクセスできません。接続が無効、もしくはホストがダウンしています。")
                     error_openAI = True
                 except openai.error.APIError:
                     print("openAI にアクセスできません。設定されたURLから無効な応答が返されました。")
+                    error_openAI = True
+                except openai.error.APIConnectionError:
+                    print("openAI APIにアクセスできません。(APiconnectionError) 接続が無効、もしくはホストがビジー状態です\n")
+                    error_openAI = True
+                except openai.error.RateLimitError:
+                    print("openAI APIにアクセスできません。レートリミットに達しました。しばらく待ってからやり直してください。")
                     error_openAI = True
                 try:
                     translator.get_usage().character
@@ -261,6 +293,9 @@ def settings(error_openAI, error_DeepL, raw_mode, translator, messages):
                     error_DeepL = True
                 except ValueError:
                     print("DeepLにアクセスできません。無効なDeepLAPIキーが設定されています。")
+                    error_DeepL = True
+                except deepl.exceptions.ConnectionException:
+                    print("DeepLにアクセスできません。接続が無効、もしくはホストがダウンしています。")
                     error_DeepL = True
                 u_api = input("\n項目を選択してください\n>>>")
 
@@ -278,6 +313,67 @@ def settings(error_openAI, error_DeepL, raw_mode, translator, messages):
                     continue
 
                 elif u_api == "3":
+                    try:
+                        print("使用したいモデルを選択してください。")
+                        num = 0
+                        for x in models:
+                            print(num, x)
+                            num += 1
+                        print(num, "新しく追加")
+                        want_model = input("==>")
+                        want_model_num = int(want_model)
+                    except ValueError:
+                        print("不正な入力です。")
+                        continue
+
+                    if want_model_num == num:
+                        search_model = input("使用したいモデル名を正確に入力してください。exitで中止\n==>")
+                        if search_model == "exit":
+                            print("API設定メニューに戻ります")
+                            continue
+
+                        for s in models:
+                            if s == search_model:
+                                print("そのモデルはリストに登録済みです。\n")
+                                break
+                        else:
+                            try:
+                                openai.Model.retrieve(search_model)
+                                print("\n"+search_model+"は利用可能です。\n")
+                                print("リストに追加し、使用するモデルとして登録します。\n")
+                                try:
+                                    user_token_input = input("対象のモデルの最大トークン数を入力してください。\n==>")
+                                    max_token = int(user_token_input)
+                                except ValueError:
+                                    print("不正な入力です。設定は変更されませんでした。\n")
+                                    continue
+                                models.append(search_model)
+                                using_model = search_model
+
+                                print("処理が完了しました。\n__________\n使用されるモデル:"+using_model+"\n最大トークン数"+str(max_token)+"\n__________\nAPI設定メニューに戻ります。\n")
+                                continue
+                            except openai.error.APIConnectionError or openai.error.AuthenticationError:
+                                print("エラーが発生しました。各設定、書式を確認してください。設定は変更されませんでした。\n")
+                                continue
+                            except openai.error.InvalidRequestError:
+                                print("無効なモデル名です。再度入力してください。")
+                                continue
+                    elif want_model_num < num:
+                        try:
+                            print("使用するモデルを"+models[want_model_num]+"に変更します。")
+                            user_token_input = input("対象のモデルの最大トークン数を入力してください。\n==>")
+                            max_token = int(user_token_input)
+                            using_model = models[want_model_num]
+                            print("変更が完了しました。\n")
+                            continue
+                        except ValueError:
+                            print("不正な入力です。設定は変更されませんでした。")
+                            continue
+                    else:
+                        print("不正な入力です。")
+                        break
+
+                elif u_api == "4":
                     print("Deepl APIのAPIキーを変更します。")
                     deepl_key = input("APIキーを貼り付けてください\n>>> ")
                     try:
@@ -286,6 +382,7 @@ def settings(error_openAI, error_DeepL, raw_mode, translator, messages):
                         continue
                     except ValueError:
                         print("無効なAPIキーです。再度設定し直してください。")
+                        continue
 
                 elif u_api == "exit":
                     print("トップメニューに戻ります。\n")
@@ -326,7 +423,7 @@ def settings(error_openAI, error_DeepL, raw_mode, translator, messages):
             break
         else:
             print("予期しない入力がされました。\n")
-    return error_openAI, error_DeepL, raw_mode, translator, messages
+    return error_openAI, error_DeepL, raw_mode, translator, messages, using_model, models, max_token
 
 
 def view(messages):
@@ -411,10 +508,10 @@ def print_talk(error_openAI, error_DeepL, raw_mode, translator, messages):
     print("コマンド入力画面に戻ります。")
 
 
-def make_answer(raw_mode, translator, messages, question):
+def make_answer(raw_mode, translator, messages, question, using_model):
     print("ただいま考え中～\n")
     messages.append({"role": "user", "content": f"{question}"})
-    response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=messages)
+    response = openai.ChatCompletion.create(model=using_model, messages=messages)
     if raw_mode is False:
         print("翻訳中~\n")
         result = translator.translate_text(response['choices'][0]['message']['content'], target_lang="JA")
@@ -427,19 +524,21 @@ def make_answer(raw_mode, translator, messages, question):
 
     messages.append({"role": response['choices'][0]['message']['role'], "content": response['choices'][0]['message']['content']})
 
+    finish_reason = response["choices"][0]["finish_reason"]
+
     print("________________________________________________________________________________________________\n")
     print("A:\n", result)
 
     print("________________________________________________________________________________________________\n")
     total = response['usage']["total_tokens"]
-    return messages, total
+    return messages, total, finish_reason
 
 
 def ask_gpt():
-    print("____________________\n\nコマンドプロンプト上で簡単にChatGPTの操作ができるしトークン数の節約をしながら記憶の半永久保存も簡単にできるくん ver.7.2.2 \n\nmade_by :Dai-H15  s1f102200828@iniad.org\n____________________\n")
+    print("____________________\n\nコマンドプロンプト上で簡単にChatGPTの操作ができるしトークン数の節約をしながら記憶の半永久保存も簡単にできるくん ver.7.4.3 \n\nmade_by :Dai-H15  s1f102200828@iniad.org\n____________________\n")
 
     # 初期化
-    question, messages, total, raw_mode, translator, error_openAI, error_DeepL, error = init()
+    question, messages, total, raw_mode, translator, error_openAI, error_DeepL, error, using_model, models, max_token, finish_reason, EOT = init()
     if error == 1:
         print("プログラムを終了します。")
         return
@@ -457,19 +556,21 @@ def ask_gpt():
             print("OpenAI API設定エラー settingsからセットアップしてください")
         if error_DeepL:
             print("DeepL APIの設定エラー settingsからセットアップしてください")
+        if EOT:
+            print("----------\n ( 情報 ) \n ----------\nトークン数の上限に達しました。新規内容から開始してください。")
 
         print("rawモード :", print_raw)
         input_type = input("\nコマンドを選択してください: ")
 
         # 1行のみ質問を入力
         if input_type == "one":
-            question, error = one(error_openAI, error_DeepL, raw_mode, translator, question)
+            question, error = one(error_openAI, error_DeepL, EOT, raw_mode, translator, question)
             if error == 1:
                 error = 0
                 continue
         # 複数行の質問の入力。実際は繋げてるだけ
         elif input_type == "mult":
-            question, error = mult(error_openAI, error_DeepL, raw_mode, translator, question)
+            question, error = mult(error_openAI, error_DeepL, EOT, raw_mode, translator, question)
             if error == 1:
                 error = 0
                 continue
@@ -477,7 +578,7 @@ def ask_gpt():
         # 会話内容のエクスポート
 
         elif input_type == "save":
-            save(raw_mode, messages)
+            save(raw_mode, messages, EOT)
             continue
             # 会話内容を初期化
 
@@ -488,11 +589,11 @@ def ask_gpt():
             continue
 
         elif input_type == "info":
-            info(error_openAI, error_DeepL, translator, total)
+            info(error_openAI, error_DeepL, translator, total, max_token)
             continue
 
         elif input_type == "settings":
-            error_openAI, error_DeepL, raw_mode, translator, messages = settings(error_openAI, error_DeepL, raw_mode, translator, messages)
+            error_openAI, error_DeepL, raw_mode, translator, messages, using_model, models, max_token = settings(error_openAI, error_DeepL, raw_mode, translator, messages, using_model, models, max_token)
             continue
 
         elif input_type == "view":
@@ -521,7 +622,7 @@ def ask_gpt():
             if input("==>") == "yes":
                 for _ in range(50):
                     print("\n")
-                question, messages, total, raw_mode, translator, error_openAI, error_DeepL, error = init()
+                question, messages, total, raw_mode, translator, error_openAI, error_DeepL, error, using_model, models, max_token, EOT = init()
                 continue
             else:
                 print("コマンド入力画面に戻ります。")
@@ -532,7 +633,9 @@ def ask_gpt():
             continue
 
         # 回答を生成・表示
-        messages, total = make_answer(raw_mode, translator, messages, question)
+        messages, total, finish_reason = make_answer(raw_mode, translator, messages, question, using_model)
+        if finish_reason == "length":
+            EOT = True
         continue
 
 
