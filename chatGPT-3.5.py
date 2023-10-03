@@ -622,7 +622,7 @@ def ask_gpt():
             if input("==>") == "yes":
                 for _ in range(50):
                     print("\n")
-                question, messages, total, raw_mode, translator, error_openAI, error_DeepL, error, using_model, models, max_token, EOT = init()
+                question, messages, total, raw_mode, translator, error_openAI, error_DeepL, error, using_model, models, max_token, finish_reason, EOT = init()
                 continue
             else:
                 print("コマンド入力画面に戻ります。")
