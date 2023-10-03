@@ -8,7 +8,6 @@ def init():  # 初期化
     print("初期化を開始します。\n")
     question = ""
     messages = [{"role": "system", "content": "You are a helpful assistant. Also you are super engineer.You can answer all questions."}]
-    total = 0
     raw_mode = False
     translator = deepl.Translator("any")
     error = 0
@@ -17,6 +16,11 @@ def init():  # 初期化
     max_token = 4096
     finish_reason = ""
     EOT = False
+    per_token_c = 0
+    per_token_i = 0
+    prompt_tokens = 0
+    completion_tokens = 0
+    total_m = 0
 
     try:
         from api_keys import set_apikey
@@ -26,6 +30,8 @@ def init():  # 初期化
             openai.Model.retrieve("gpt-3.5-turbo")
             print("openAI APIの読み込みに成功しました。gpt-3.5-turboが使用可能です。\n")
             models.append(using_model)
+            per_token_c = 0.002
+            per_token_i = 0.0015
             print("現在のベースURLは '{}' です\n".format(openai.api_base))
             error_openAI = False
 
@@ -55,7 +61,7 @@ def init():  # 初期化
         except deepl.exceptions.ConnectionException:
             print(" ----------\n ( 警告 ) \n ----------\nエラー: DeepLにアクセスできません。接続が無効、もしくはホストがダウンしています。")
             error_DeepL = True
-            
+
     except openai.error.AuthenticationError:
         print(" ----------\n ( 警告 ) \n ----------\nAPIキーの読み込みに失敗しました。settingsから指定してください。\n")
         print(" ----------\n ( 情報 ) \n ----------\n現在のベースURLは '{}' です\n".format(openai.api_base))
@@ -98,7 +104,8 @@ def init():  # 初期化
                 elif another_prompt == "no":
                     for p in prompt:
                         messages.append(p)
-                    return question, messages, total, raw_mode, translator, error_openAI, error_DeepL, error, using_model, models, max_token, finish_reason, EOT
+                    return (question, messages, raw_mode, translator, error_openAI, error_DeepL, error, using_model, models,
+                            max_token, finish_reason, EOT, per_token_c, per_token_i, prompt_tokens, completion_tokens, total_m)
                 else:
                     print("正しく入力してください。")
                     continue
@@ -114,7 +121,8 @@ def init():  # 初期化
             print("想定外の内容が入力されました")
             error = 1
         print("処理が完了しました。\n")
-        return question, messages, total, raw_mode, translator, error_openAI, error_DeepL, error, using_model, models, max_token, finish_reason, EOT
+        return (question, messages, raw_mode, translator, error_openAI, error_DeepL, error, using_model, models,
+                max_token, finish_reason, EOT, per_token_c, per_token_i, prompt_tokens, completion_tokens, total_m)
 
 
 def export_prompt(prompt, export_ans_num):
@@ -168,12 +176,12 @@ def mult(error_openAI, error_DeepL, EOT, raw_mode, translator, question):
         print("----------\n ( 警告 ) \n ----------\n設定が無効です。API設定を確認してください\n___________________________\n")
         error = 1
         return question, error
-    
+
     if EOT:
         print("----------\n ( 情報 ) \n ----------\nトークン数の上限に達しました。新規内容から開始してください。\nまた、printコマンドから内容の書き出しを利用できます。\n")
         error = 1
         return question, error
-    
+
     while end == 0:
         user_question = input("質問を入力してください(end)で入力終了,exitでプログラムを終了: ")
         if user_question == "exit":
@@ -227,16 +235,19 @@ def save(raw_mode, messages, EOT):
     print("完了しました。")
 
 
-def info(error_openAI, error_DeepL, translator, total, max_token):
+def info(error_openAI, error_DeepL, translator, using_model, max_token, total_m, prompt_tokens, completion_tokens, per_token_c, per_token_i):
     if (error_openAI or error_DeepL) is True:
         print("----------\n ( 警告 ) \n ----------\n設定が無効です。API設定を確認してください\n___________________________\n")
         return
-    print("現在消費しているトークン数：{}/{}  使用率: {} % \n".format(total, max_token, round(total/max_token, 3)*100))
+    print("処理が完了しました。\n__________\n\n使用されるモデル: "+using_model+"\n最大トークン数: "+str(max_token)+"\n会話生成時利用料金: $"+str(per_token_c)+"\nプロンプト入力時利用料金: $"+str(per_token_i)+"\n")
+
+    print("現在消費しているトークン数：{}/{}  使用率: {} % \n".format(prompt_tokens+completion_tokens, max_token, round((prompt_tokens+completion_tokens)/max_token, 3)*100))
+    print("現在の概算利用金額: ${} \n".format(total_m/1000))
     x = translator.get_usage().character
-    print("DeepLアカウントの使用状況: {}/{} 使用率:  {} % \n".format(x.count, x.limit, round(x.count/x.limit*100, 2)))
+    print("DeepLアカウントの使用状況: {}/{} 使用率:  {} % \n__________\n\n".format(x.count, x.limit, round(x.count/x.limit*100, 2)))
 
 
-def settings(error_openAI, error_DeepL, raw_mode, translator, messages, using_model, models, max_token):
+def settings(error_openAI, error_DeepL, raw_mode, translator, messages, using_model, models, max_token, per_token_c, per_token_i):
     while True:
         print("\n________________\n\n変更する設定を選んでください\n 1.自動翻訳機能(rawモード)\n 2.API設定\n 3.初期プロンプトの指定\n exit:設定を終了\n ")
         u_type = input(">>>")
@@ -284,6 +295,7 @@ def settings(error_openAI, error_DeepL, raw_mode, translator, messages, using_mo
                 except openai.error.RateLimitError:
                     print("openAI APIにアクセスできません。レートリミットに達しました。しばらく待ってからやり直してください。")
                     error_openAI = True
+                print(" ----------\n ( 情報 ) \n ----------\n現在のベースURLは '{}' です\n".format(openai.api_base))
                 try:
                     translator.get_usage().character
                     print("DeepLが使用可能です")
@@ -344,13 +356,18 @@ def settings(error_openAI, error_DeepL, raw_mode, translator, messages, using_mo
                                 try:
                                     user_token_input = input("対象のモデルの最大トークン数を入力してください。\n==>")
                                     max_token = int(user_token_input)
+                                    user_per_token_c_input = input("対象のモデルの会話生成時トークン数1kあたりの利用料金をドル単位で入力してください。\n==>")
+                                    per_token_c = float(user_per_token_c_input)
+                                    user_per_token_i_input = input("対象のモデルのプロンプト入力時トークン数1kあたりの利用料金をドル単位で入力してください。\n==>")
+                                    per_token_i = float(user_per_token_i_input)
+
                                 except ValueError:
                                     print("不正な入力です。設定は変更されませんでした。\n")
                                     continue
                                 models.append(search_model)
                                 using_model = search_model
 
-                                print("処理が完了しました。\n__________\n使用されるモデル:"+using_model+"\n最大トークン数"+str(max_token)+"\n__________\nAPI設定メニューに戻ります。\n")
+                                print("処理が完了しました。\n__________\n使用されるモデル: "+using_model+"\n最大トークン数: "+str(max_token)+"\n会話生成時利用料金: $"+str(per_token_c)+"\nプロンプト入力時利用料金: $"+str(per_token_i)+"\n__________\nAPI設定メニューに戻ります。\n")
                                 continue
                             except openai.error.APIConnectionError or openai.error.AuthenticationError:
                                 print("エラーが発生しました。各設定、書式を確認してください。設定は変更されませんでした。\n")
@@ -360,9 +377,13 @@ def settings(error_openAI, error_DeepL, raw_mode, translator, messages, using_mo
                                 continue
                     elif want_model_num < num:
                         try:
-                            print("使用するモデルを"+models[want_model_num]+"に変更します。")
+                            print("使用するモデルを"+models[want_model_num]+"に変更します。\n")
                             user_token_input = input("対象のモデルの最大トークン数を入力してください。\n==>")
                             max_token = int(user_token_input)
+                            user_per_token_c_input = input("対象のモデルの会話生成時トークン数1kあたりの利用料金をドル単位で入力してください。\n==>")
+                            per_token_c = float(user_per_token_c_input)
+                            user_per_token_i_input = input("対象のモデルのプロンプト入力時トークン数1kあたりの利用料金をドル単位で入力してください。\n==>")
+                            per_token_i = float(user_per_token_i_input)
                             using_model = models[want_model_num]
                             print("変更が完了しました。\n")
                             continue
@@ -423,7 +444,7 @@ def settings(error_openAI, error_DeepL, raw_mode, translator, messages, using_mo
             break
         else:
             print("予期しない入力がされました。\n")
-    return error_openAI, error_DeepL, raw_mode, translator, messages, using_model, models, max_token
+    return error_openAI, error_DeepL, raw_mode, translator, messages, using_model, models, max_token, per_token_c, per_token_i
 
 
 def view(messages):
@@ -511,7 +532,16 @@ def print_talk(error_openAI, error_DeepL, raw_mode, translator, messages):
 def make_answer(raw_mode, translator, messages, question, using_model):
     print("ただいま考え中～\n")
     messages.append({"role": "user", "content": f"{question}"})
-    response = openai.ChatCompletion.create(model=using_model, messages=messages)
+    try:
+        response = openai.ChatCompletion.create(
+            model=using_model,
+            messages=messages
+
+            )
+    except openai.error.InvalidRequestError:
+        print("----------\n ( 警告 ) \n ----------\nエラーが発生しました。モデルを変更した場合、使用許可がされていないモデルの可能性があります。APIキー、URLを変更するか、管理者に問い合わせてください。\n")
+        messages = messages[:-1]
+        return messages, "", 0, 0
     if raw_mode is False:
         print("翻訳中~\n")
         result = translator.translate_text(response['choices'][0]['message']['content'], target_lang="JA")
@@ -530,15 +560,17 @@ def make_answer(raw_mode, translator, messages, question, using_model):
     print("A:\n", result)
 
     print("________________________________________________________________________________________________\n")
-    total = response['usage']["total_tokens"]
-    return messages, total, finish_reason
+    prompt_tokens = response["usage"]["prompt_tokens"]
+    completion_tokens = response["usage"]["completion_tokens"]
+
+    return messages, finish_reason, prompt_tokens, completion_tokens
 
 
-def ask_gpt():
-    print("____________________\n\nコマンドプロンプト上で簡単にChatGPTの操作ができるしトークン数の節約をしながら記憶の半永久保存も簡単にできるくん ver.7.4.3 \n\nmade_by :Dai-H15  s1f102200828@iniad.org\n____________________\n")
+def main_app():
+    print("____________________\n\nコマンドプロンプト上で簡単にChatGPTの操作ができるしトークン数の節約をしながら記憶の半永久保存も簡単にできるくん ver.7.5.5 \n\nmade_by :Dai-H15  s1f102200828@iniad.org\n____________________\n")
 
     # 初期化
-    question, messages, total, raw_mode, translator, error_openAI, error_DeepL, error, using_model, models, max_token, finish_reason, EOT = init()
+    question, messages, raw_mode, translator, error_openAI, error_DeepL, error, using_model, models, max_token, finish_reason, EOT, per_token_c, per_token_i, prompt_tokens, completion_tokens, total_m = init()
     if error == 1:
         print("プログラムを終了します。")
         return
@@ -585,15 +617,15 @@ def ask_gpt():
         elif input_type == "new":
             messages = [{"role": "system", "content": "You are a helpful assistant. Also you are super engineer.You can answer all questions."}]
             print("会話内容をリセットしました。\n")
-            total = 0
             continue
 
         elif input_type == "info":
-            info(error_openAI, error_DeepL, translator, total, max_token)
+            info(error_openAI, error_DeepL, translator, using_model, max_token, total_m, prompt_tokens, completion_tokens, per_token_c, per_token_i)
             continue
 
         elif input_type == "settings":
-            error_openAI, error_DeepL, raw_mode, translator, messages, using_model, models, max_token = settings(error_openAI, error_DeepL, raw_mode, translator, messages, using_model, models, max_token)
+            error_openAI, error_DeepL, raw_mode, translator, messages, using_model, models, max_token, per_token_c, per_token_i = settings(error_openAI, error_DeepL, raw_mode, translator, messages, using_model,
+                                                                                                                                           models, max_token, per_token_c, per_token_i)
             continue
 
         elif input_type == "view":
@@ -622,7 +654,7 @@ def ask_gpt():
             if input("==>") == "yes":
                 for _ in range(50):
                     print("\n")
-                question, messages, total, raw_mode, translator, error_openAI, error_DeepL, error, using_model, models, max_token, finish_reason, EOT = init()
+                question, messages, raw_mode, translator, error_openAI, error_DeepL, error, using_model, models, max_token, finish_reason, EOT, per_token_c, per_token_i, prompt_tokens, completion_tokens, total_m = init()
                 continue
             else:
                 print("コマンド入力画面に戻ります。")
@@ -633,10 +665,12 @@ def ask_gpt():
             continue
 
         # 回答を生成・表示
-        messages, total, finish_reason = make_answer(raw_mode, translator, messages, question, using_model)
+        messages, finish_reason, prompt_tokens, completion_tokens = make_answer(raw_mode, translator, messages, question, using_model)
         if finish_reason == "length":
             EOT = True
+
+        total_m += prompt_tokens*per_token_i + completion_tokens*per_token_c
         continue
 
 
-ask_gpt()
+main_app()
