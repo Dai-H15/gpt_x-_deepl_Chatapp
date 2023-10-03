@@ -21,11 +21,6 @@ def init():  # 初期化
     prompt_tokens = 0
     completion_tokens = 0
     total_m = 0
-    per_token_c = 0
-    per_token_i = 0
-    prompt_tokens = 0
-    completion_tokens = 0
-    total_m = 0
 
     try:
         from api_keys import set_apikey
