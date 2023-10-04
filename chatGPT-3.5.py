@@ -2,6 +2,7 @@ import openai
 import json
 import os
 import deepl
+task_num = 1
 
 
 def init():  # 初期化
@@ -567,7 +568,7 @@ def make_answer(raw_mode, translator, messages, question, using_model):
 
 
 def main_app():
-    print("____________________\n\nコマンドプロンプト上で簡単にChatGPTの操作ができるしトークン数の節約をしながら記憶の半永久保存も簡単にできるくん ver.7.5.5 \n\nmade_by :Dai-H15  s1f102200828@iniad.org\n____________________\n")
+    print("____________________\n\nコマンドプロンプト上で簡単にChatGPTの操作ができるしトークン数の節約をしながら記憶の半永久保存も簡単にできるくん ver.7.6.0 \n\nmade_by :Dai-H15  s1f102200828@iniad.org\n____________________\n")
 
     # 初期化
     question, messages, raw_mode, translator, error_openAI, error_DeepL, error, using_model, models, max_token, finish_reason, EOT, per_token_c, per_token_i, prompt_tokens, completion_tokens, total_m = init()
@@ -642,7 +643,8 @@ def main_app():
         # その他コマンドを入力された場合にもどる
 
         elif input_type == "help":
-            print("コマンド  \none:一文のみ入力 \nmult:連続入力  \nsave:プロンプトをエクスポートして終了 \nnew:会話を新しくやり直す \ninfo:現在のトークン数を表示(インポート直後は無効) \nview:会話内容を全表示 \ntranslate:会話内容を日本語化して表示 \nexit:保存せずに終了 \nreload:アプリを再起動 \nsettings:詳細設定を表示 \nprint:テキストファイル形式で会話内容を出力\n ")
+            print("コマンド  \none:一文のみ入力 \nmult:連続入力  \nsave:プロンプトをエクスポートして終了 \nnew:会話を新しくやり直す \ninfo:現在のトークン数を表示(インポート直後は無効)  ")
+            print("view:会話内容を全表示 \ntranslate:会話内容を日本語化して表示 \nexit:保存せずに終了 \nreload:アプリを再起動 \nsettings:詳細設定を表示 \nprint:テキストファイル形式で会話内容を出力\ntask: 別のタスクを起動\n")
             continue
 
         elif input_type == "print":
@@ -659,6 +661,15 @@ def main_app():
             else:
                 print("コマンド入力画面に戻ります。")
                 continue
+        elif input_type == "task":
+            for _ in range(50):
+                print("\n")
+            print("新規内容でタスクを起動します")
+            main_app()
+            for _ in range(50):
+                print("\n")
+            print("終了しました。1個前のタスクに戻ります。")
+            continue
 
         else:
             print("正しいコマンドを入力してください  help でコマンド例を表示\n")
