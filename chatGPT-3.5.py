@@ -105,6 +105,8 @@ def init():  # 初期化
                 elif another_prompt == "no":
                     for p in prompt:
                         messages.append(p)
+                    os.system('cls')
+                    print("処理が完了しました。\n")
                     return (question, messages, raw_mode, translator, error_openAI, error_DeepL, error, using_model, models,
                             max_token, finish_reason, EOT, per_token_c, per_token_i, prompt_tokens, completion_tokens, total_m)
                 else:
@@ -121,6 +123,7 @@ def init():  # 初期化
         else:
             print("想定外の内容が入力されました")
             error = 1
+        os.system('cls')
         print("処理が完了しました。\n")
         return (question, messages, raw_mode, translator, error_openAI, error_DeepL, error, using_model, models,
                 max_token, finish_reason, EOT, per_token_c, per_token_i, prompt_tokens, completion_tokens, total_m)
@@ -217,6 +220,7 @@ def mult(error_openAI, error_DeepL, EOT, raw_mode, translator, question):
 
 
 def save(raw_mode, messages, EOT):
+    os.system('cls')
     if EOT:
         print("----------\n ( 情報 ) \n ----------\nトークン数の上限に達しました。プロンプトを保存できません。printコマンドから内容の書き出しを行ってください。")
         return
@@ -233,6 +237,7 @@ def save(raw_mode, messages, EOT):
     else:
         print("----------\n ( 警告 ) \n ----------\nrawモードが有効化されています。次回以降の動作時に詳細設定からrawモードを有効化する必要があります。\n")
         export_prompt(messages[1:], export_num)
+        os.system('cls')
     print("完了しました。")
 
 
@@ -240,8 +245,9 @@ def info(error_openAI, error_DeepL, translator, using_model, max_token, total_m,
     if (error_openAI or error_DeepL) is True:
         print("----------\n ( 警告 ) \n ----------\n設定が無効です。API設定を確認してください\n___________________________\n")
         return
-    print("処理が完了しました。\n__________\n\n使用されるモデル: "+using_model+"\n最大トークン数: "+str(max_token)+"\n会話生成時利用料金: $"+str(per_token_c)+"\nプロンプト入力時利用料金: $"+str(per_token_i)+"\n")
 
+    print("処理が完了しました。\n__________\n\n使用されるモデル: "+using_model+"\n最大トークン数: "+str(max_token)+"\n会話生成時利用料金: $"+str(per_token_c)+"\nプロンプト入力時利用料金: $"+str(per_token_i)+"\n")
+    print("\n現在のベースURLは '{}' です\n".format(openai.api_base))
     print("現在消費しているトークン数：{}/{}  使用率: {} % \n".format(prompt_tokens+completion_tokens, max_token, round((prompt_tokens+completion_tokens)/max_token, 3)*100))
     print("現在の概算利用金額: ${} \n".format(total_m/1000))
     x = translator.get_usage().character
@@ -249,26 +255,32 @@ def info(error_openAI, error_DeepL, translator, using_model, max_token, total_m,
 
 
 def settings(error_openAI, error_DeepL, raw_mode, translator, messages, using_model, models, max_token, per_token_c, per_token_i):
+    os.system('cls')
     while True:
         print("\n________________\n\n変更する設定を選んでください\n 1.自動翻訳機能(rawモード)\n 2.API設定\n 3.初期プロンプトの指定\n exit:設定を終了\n ")
         u_type = input(">>>")
         if u_type == "1":
+            os.system('cls')
             print("このプログラムは、ChatGPTにおけるトークン数の消費量削減のために、送信時、受信時に適した状態にする機能が搭載されています。\nしかし、ソースコードを送信する際や、使用しているAPIは自動翻訳のため、意図した回答が得られない状況が発生するおそれがあります。通常はこの機能を有効にしておくことをおすすめしますが、こういった状況に陥った場合にオフにすることも可能です")
             print("\n既定の設定では自動翻訳が有効化されているため、rawモードは無効になっています")
             tra_inp = input("rawモードを有効にしますか？ yes/no : ")
             if tra_inp == "no":
                 raw_mode = False
+                os.system('cls')
                 print("rawモードが無効化されました\n")
                 continue
             elif tra_inp == "yes":
                 raw_mode = True
+                os.system('cls')
                 print("rawモードが有効化されました。トークン数にご注意ください。\n")
                 print(" ----------\n ( 情報 ) \n ----------\n本設定を有効にすると、以降保存されるプロンプトも翻訳されずに追記されていくので注意してください。\n________________________________________________\n")
 
             else:
+                os.system('cls')
                 print("予期しない入力を受け付けました。トップに戻ります\n")
 
         elif u_type == "2":
+            os.system('cls')
             while True:
                 print("\n________________\n\nAPI設定メニュー\n\n1: openai.api_keyの変更\n2: openai.api_baseの変更\n3: 使用するモデルの変更\n4: DeepLAPIキーの変更 \nexit: 設定メニューにもどる\n")
                 try:
@@ -284,9 +296,6 @@ def settings(error_openAI, error_DeepL, raw_mode, translator, messages, using_mo
                 except openai.error.InvalidRequestError:
                     error_openAI = True
                     print("openAI にアクセスできません。不正なURL、もしくは無効なモデルが選択されています")
-                except openai.error.APIConnectionError:
-                    print("openAI にアクセスできません。接続が無効、もしくはホストがダウンしています。")
-                    error_openAI = True
                 except openai.error.APIError:
                     print("openAI にアクセスできません。設定されたURLから無効な応答が返されました。")
                     error_openAI = True
@@ -313,19 +322,24 @@ def settings(error_openAI, error_DeepL, raw_mode, translator, messages, using_mo
                 u_api = input("\n項目を選択してください\n>>>")
 
                 if u_api == "1":
+                    os.system('cls')
                     print("OpenAI APIのAPIキーを変更します。")
                     openai_key = input("\napi_keyを貼り付けてください\n>>> ")
                     openai.api_key = openai_key
+                    os.system('cls')
                     print("APIキーの変更に成功しました。")
                     continue
 
                 elif u_api == "2":
+                    os.system('cls')
                     openai_base = input("\nopenai.api_baseとして指定するURLを入力してください。\n>>> ")
                     openai.api_base = openai_base
+                    os.system('cls')
                     print("openai.api_baseの変更に成功しました。")
                     continue
 
                 elif u_api == "3":
+                    os.system('cls')
                     try:
                         print("使用したいモデルを選択してください。")
                         num = 0
@@ -336,21 +350,26 @@ def settings(error_openAI, error_DeepL, raw_mode, translator, messages, using_mo
                         want_model = input("==>")
                         want_model_num = int(want_model)
                     except ValueError:
+                        os.system('cls')
                         print("不正な入力です。")
                         continue
 
                     if want_model_num == num:
+                        os.system('cls')
                         search_model = input("使用したいモデル名を正確に入力してください。exitで中止\n==>")
                         if search_model == "exit":
+                            os.system('cls')
                             print("API設定メニューに戻ります")
                             continue
 
                         for s in models:
                             if s == search_model:
+                                os.system('cls')
                                 print("そのモデルはリストに登録済みです。\n")
                                 break
                         else:
                             try:
+                                os.system('cls')
                                 openai.Model.retrieve(search_model)
                                 print("\n"+search_model+"は利用可能です。\n")
                                 print("リストに追加し、使用するモデルとして登録します。\n")
@@ -363,17 +382,20 @@ def settings(error_openAI, error_DeepL, raw_mode, translator, messages, using_mo
                                     per_token_i = float(user_per_token_i_input)
 
                                 except ValueError:
+                                    os.system('cls')
                                     print("不正な入力です。設定は変更されませんでした。\n")
                                     continue
                                 models.append(search_model)
                                 using_model = search_model
-
+                                os.system('cls')
                                 print("処理が完了しました。\n__________\n使用されるモデル: "+using_model+"\n最大トークン数: "+str(max_token)+"\n会話生成時利用料金: $"+str(per_token_c)+"\nプロンプト入力時利用料金: $"+str(per_token_i)+"\n__________\nAPI設定メニューに戻ります。\n")
                                 continue
                             except openai.error.APIConnectionError or openai.error.AuthenticationError:
+                                os.system('cls')
                                 print("エラーが発生しました。各設定、書式を確認してください。設定は変更されませんでした。\n")
                                 continue
                             except openai.error.InvalidRequestError:
+                                os.system('cls')
                                 print("無効なモデル名です。再度入力してください。")
                                 continue
                     elif want_model_num < num:
@@ -386,69 +408,79 @@ def settings(error_openAI, error_DeepL, raw_mode, translator, messages, using_mo
                             user_per_token_i_input = input("対象のモデルのプロンプト入力時トークン数1kあたりの利用料金をドル単位で入力してください。\n==>")
                             per_token_i = float(user_per_token_i_input)
                             using_model = models[want_model_num]
+                            os.system('cls')
                             print("変更が完了しました。\n")
                             continue
                         except ValueError:
+                            os.system('cls')
                             print("不正な入力です。設定は変更されませんでした。")
                             continue
                     else:
+                        os.system('cls')
                         print("不正な入力です。")
                         break
 
                 elif u_api == "4":
+                    os.system('cls')
                     print("Deepl APIのAPIキーを変更します。")
                     deepl_key = input("APIキーを貼り付けてください\n>>> ")
                     try:
                         translator = deepl.Translator(deepl_key)
+                        os.system('cls')
                         print("APIキーの変更に成功しました。DeepLを使用した翻訳が可能です。")
                         continue
                     except ValueError:
+                        os.system('cls')
                         print("無効なAPIキーです。再度設定し直してください。")
                         continue
 
                 elif u_api == "exit":
+                    os.system('cls')
                     print("トップメニューに戻ります。\n")
                     break
 
                 else:
+                    os.system('cls')
                     print("\n予期しない入力がされました。")
                 print("API設定メニューに戻ります\n")
 
             continue
 
         elif u_type == "3":
+            os.system('cls')
             print("初めにGPTに渡すプロンプトの内容を変更できます。\n")
-            u_prompt = input("新しく設定するプロンプトを入力してください。'default'と入力することで初期状態に戻すことができます。\n >>>")
+            u_prompt = input("新しく設定するプロンプトを日本語で入力してください。'default'と入力することで初期状態に戻すことができます。\n >>>")
             if u_prompt == "default":
-                messages[0] = {"role": "system", "content": "You are a helpful assistant. Also you are super engineer.You can answer all questions."}
-                print("初期状態に戻りました。\n")
-                print("settingsメニューに戻ります。")
-                continue
+                print("初期状態に戻します。\n")
+                u_prompt = "あなたは親切なアシスタントです。また、あなたは完璧なエンジニアで、様々な回答ができます。"
 
-            else:
-                print("英語に翻訳しますか?")
-                u_lang = input("yes/no \n>>>")
-                if u_lang == "yes":
-                    print("翻訳してから変更されます。\n")
-                    messages[0] = {"role": "system", "content": "{}".format(translator.translate_text(u_prompt, target_lang="EN-US"))}
+            print("英語に翻訳しますか?")
+            u_lang = input("yes/no \n>>>")
+            if u_lang == "yes":
+                print("翻訳してから変更されます。\n")
+                messages[0] = {"role": "system", "content": "{}".format(translator.translate_text(u_prompt, target_lang="EN-US"))}
 
-                elif u_lang == "no":
-                    messages[0] = {"role": "system", "content": "{}".format(u_prompt)}
-
-                print("正常に変更されました。\n")
-                print("現在の初期プロンプトは、'{}'\n".format(messages[0]["content"]))
-                print("settingsメニューに戻ります。")
-                continue
+            elif u_lang == "no":
+                messages[0] = {"role": "system", "content": "{}".format(u_prompt)}
+            os.system('cls')
+            print("正常に変更されました。\n")
+            print("現在の初期プロンプトは、'{}'\n".format(messages[0]["content"]))
+            print("settingsメニューに戻ります。")
+            u_prompt = ""
+            continue
 
         elif u_type == "exit":
+            os.system('cls')
             print("コマンド入力に戻ります。\n")
             break
         else:
+            os.system('cls')
             print("予期しない入力がされました。\n")
     return error_openAI, error_DeepL, raw_mode, translator, messages, using_model, models, max_token, per_token_c, per_token_i
 
 
 def view(messages):
+    os.system('cls')
     print("\n会話内容を表示します。\n")
     for message in messages[1:]:
         print("________________________________________________________________________________________________\n")
@@ -459,6 +491,7 @@ def view(messages):
 
 
 def translate(error_openAI, error_DeepL, raw_mode, translator, messages):
+    os.system('cls')
     if (error_openAI or error_DeepL) is True:
         print("----------\n ( 警告 ) \n ----------\n設定が無効です。API設定を確認してください\n___________________________\n")
         return
@@ -480,13 +513,12 @@ def translate(error_openAI, error_DeepL, raw_mode, translator, messages):
             print("________________________________________________________________________________________________\n")
             print("\n")
         print("\n完了しました")
-        return
     else:
         print("トップに戻ります。")
-        return
 
 
 def print_talk(error_openAI, error_DeepL, raw_mode, translator, messages):
+    os.system('cls')
     if (error_openAI or error_DeepL) is True:
         print("----------\n ( 警告 ) \n ----------\n設定が無効です。API設定を確認してください\n___________________________\n")
         return
@@ -568,120 +600,128 @@ def make_answer(raw_mode, translator, messages, question, using_model):
 
 
 def main_app():
-    print("____________________\n\nコマンドプロンプト上で簡単にChatGPTの操作ができるしトークン数の節約をしながら記憶の半永久保存も簡単にできるくん ver.7.6.0 \n\nmade_by :Dai-H15  s1f102200828@iniad.org\n____________________\n")
+    try:
+        print("____________________\n\nコマンドプロンプト上で簡単にChatGPTの操作ができるしトークン数の節約をしながら記憶の半永久保存も簡単にできるくん ver.7.7.0 \n\nmade_by :Dai-H15  s1f102200828@iniad.org\n____________________\n")
 
-    # 初期化
-    question, messages, raw_mode, translator, error_openAI, error_DeepL, error, using_model, models, max_token, finish_reason, EOT, per_token_c, per_token_i, prompt_tokens, completion_tokens, total_m = init()
-    if error == 1:
-        print("プログラムを終了します。")
-        return
-    print("________________________________________________________________________________________________\n")
+        # 初期化
+        question, messages, raw_mode, translator, error_openAI, error_DeepL, error, using_model, models, max_token, finish_reason, EOT, per_token_c, per_token_i, prompt_tokens, completion_tokens, total_m = init()
+        if error == 1:
+            print("プログラムを終了します。")
+            return
+        print("________________________________________________________________________________________________\n")
 
-    # 会話生成本体
-    while True:
+        # 会話生成本体
+        while True:
 
-        # 条件分岐
-        if raw_mode is True:
-            print_raw = "有効"
-        else:
-            print_raw = "無効"
-        if error_openAI:
-            print("OpenAI API設定エラー settingsからセットアップしてください")
-        if error_DeepL:
-            print("DeepL APIの設定エラー settingsからセットアップしてください")
-        if EOT:
-            print("----------\n ( 情報 ) \n ----------\nトークン数の上限に達しました。新規内容から開始してください。")
-
-        print("rawモード :", print_raw)
-        input_type = input("\nコマンドを選択してください: ")
-
-        # 1行のみ質問を入力
-        if input_type == "one":
-            question, error = one(error_openAI, error_DeepL, EOT, raw_mode, translator, question)
-            if error == 1:
-                error = 0
-                continue
-        # 複数行の質問の入力。実際は繋げてるだけ
-        elif input_type == "mult":
-            question, error = mult(error_openAI, error_DeepL, EOT, raw_mode, translator, question)
-            if error == 1:
-                error = 0
-                continue
-
-        # 会話内容のエクスポート
-
-        elif input_type == "save":
-            save(raw_mode, messages, EOT)
-            continue
-            # 会話内容を初期化
-
-        elif input_type == "new":
-            messages = [{"role": "system", "content": "You are a helpful assistant. Also you are super engineer.You can answer all questions."}]
-            print("会話内容をリセットしました。\n")
-            continue
-
-        elif input_type == "info":
-            info(error_openAI, error_DeepL, translator, using_model, max_token, total_m, prompt_tokens, completion_tokens, per_token_c, per_token_i)
-            continue
-
-        elif input_type == "settings":
-            error_openAI, error_DeepL, raw_mode, translator, messages, using_model, models, max_token, per_token_c, per_token_i = settings(error_openAI, error_DeepL, raw_mode, translator, messages, using_model,
-                                                                                                                                           models, max_token, per_token_c, per_token_i)
-            continue
-
-        elif input_type == "view":
-            view(messages)
-            continue
-
-        elif input_type == "translate":
-            translate(error_openAI, error_DeepL, raw_mode, translator, messages)
-            continue
-
-        elif input_type == "exit":
-            print("Seeyou :)")
-            break
-        # その他コマンドを入力された場合にもどる
-
-        elif input_type == "help":
-            print("コマンド  \none:一文のみ入力 \nmult:連続入力  \nsave:プロンプトをエクスポートして終了 \nnew:会話を新しくやり直す \ninfo:現在のトークン数を表示(インポート直後は無効)  ")
-            print("view:会話内容を全表示 \ntranslate:会話内容を日本語化して表示 \nexit:保存せずに終了 \nreload:アプリを再起動 \nsettings:詳細設定を表示 \nprint:テキストファイル形式で会話内容を出力\ntask: 別のタスクを起動\n")
-            continue
-
-        elif input_type == "print":
-            print_talk(error_openAI, error_DeepL, raw_mode, translator, messages)
-            continue
-
-        elif input_type == "reload":
-            print("再度読み込み直します。保存されていない情報は消えますがよろしいですか？(yes / no )\n")
-            if input("==>") == "yes":
-                for _ in range(50):
-                    print("\n")
-                question, messages, raw_mode, translator, error_openAI, error_DeepL, error, using_model, models, max_token, finish_reason, EOT, per_token_c, per_token_i, prompt_tokens, completion_tokens, total_m = init()
-                continue
+            # 条件分岐
+            if raw_mode is True:
+                print_raw = "有効"
             else:
-                print("コマンド入力画面に戻ります。")
+                print_raw = "無効"
+            if error_openAI:
+                print("OpenAI API設定エラー settingsからセットアップしてください")
+            if error_DeepL:
+                print("DeepL APIの設定エラー settingsからセットアップしてください")
+            if EOT:
+                print("----------\n ( 情報 ) \n ----------\nトークン数の上限に達しました。新規内容から開始してください。")
+
+            print("rawモード :", print_raw)
+            input_type = input("\nコマンドを選択してください: ")
+
+            # 1行のみ質問を入力
+            if input_type == "one":
+                question, error = one(error_openAI, error_DeepL, EOT, raw_mode, translator, question)
+                if error == 1:
+                    error = 0
+                    continue
+            # 複数行の質問の入力。実際は繋げてるだけ
+            elif input_type == "mult":
+                question, error = mult(error_openAI, error_DeepL, EOT, raw_mode, translator, question)
+                if error == 1:
+                    error = 0
+                    continue
+
+            # 会話内容のエクスポート
+
+            elif input_type == "save":
+                
+                save(raw_mode, messages, EOT)
                 continue
-        elif input_type == "task":
-            for _ in range(50):
-                print("\n")
-            print("新規内容でタスクを起動します")
-            main_app()
-            for _ in range(50):
-                print("\n")
-            print("終了しました。1個前のタスクに戻ります。")
+                # 会話内容を初期化
+
+            elif input_type == "new":
+                messages = [{"role": "system", "content": "You are a helpful assistant. Also you are super engineer.You can answer all questions."}]
+                os.system('cls')
+                print("会話内容をリセットしました。\n")
+                continue
+
+            elif input_type == "info":
+                info(error_openAI, error_DeepL, translator, using_model, max_token, total_m, prompt_tokens, completion_tokens, per_token_c, per_token_i)
+                continue
+
+            elif input_type == "settings":
+                os.system('cls')
+                error_openAI, error_DeepL, raw_mode, translator, messages, using_model, models, max_token, per_token_c, per_token_i = settings(error_openAI, error_DeepL, raw_mode, translator, messages, using_model,
+                                                                                                                                               models, max_token, per_token_c, per_token_i)
+                continue
+
+            elif input_type == "view":
+                view(messages)
+                continue
+
+            elif input_type == "translate":
+                translate(error_openAI, error_DeepL, raw_mode, translator, messages)
+                continue
+
+            elif input_type == "exit":
+                print("Seeyou :)")
+                break
+            # その他コマンドを入力された場合にもどる
+
+            elif input_type == "help":
+                os.system('cls')
+                print("コマンド  \none:一文のみ入力 \nmult:連続入力  \nsave:プロンプトをエクスポートして終了 \nnew:会話を新しくやり直す \ninfo:現在のトークン数を表示(インポート直後は無効)  ")
+                print("view:会話内容を全表示 \ntranslate:会話内容を日本語化して表示 \nexit:保存せずに終了 \nreload:アプリを再起動 \nsettings:詳細設定を表示 \nprint:テキストファイル形式で会話内容を出力\ntask: 別のタスクを起動\n")
+                continue
+
+            elif input_type == "print":
+                print_talk(error_openAI, error_DeepL, raw_mode, translator, messages)
+                continue
+
+            elif input_type == "reload":
+                print("再度読み込み直します。保存されていない情報は消えますがよろしいですか？(yes / no )\n")
+                if input("==>") == "yes":
+                    os.system('cls')
+                    question, messages, raw_mode, translator, error_openAI, error_DeepL, error, using_model, models, max_token, finish_reason, EOT, per_token_c, per_token_i, prompt_tokens, completion_tokens, total_m = init()
+                    continue
+                else:
+                    print("コマンド入力画面に戻ります。")
+                    continue
+
+            elif input_type == "task":
+                os.system('cls')
+                print("新規内容でタスクを起動します")
+                main_app()
+                os.system('cls')
+                print("終了しました。1個前のタスクに戻ります。")
+                continue
+
+            else:
+                print("正しいコマンドを入力してください  help でコマンド例を表示\n")
+                continue
+            # 回答を生成・表示
+            messages, finish_reason, prompt_tokens, completion_tokens = make_answer(raw_mode, translator, messages, question, using_model)
+            if finish_reason == "length":
+                EOT = True
+
+            total_m += prompt_tokens*per_token_i + completion_tokens*per_token_c
             continue
-
-        else:
-            print("正しいコマンドを入力してください  help でコマンド例を表示\n")
-            continue
-
-        # 回答を生成・表示
-        messages, finish_reason, prompt_tokens, completion_tokens = make_answer(raw_mode, translator, messages, question, using_model)
-        if finish_reason == "length":
-            EOT = True
-
-        total_m += prompt_tokens*per_token_i + completion_tokens*per_token_c
-        continue
+    except KeyboardInterrupt:
+        if len(messages) > 1:
+            if input("\n終了前に会話内容を保存しますか？ yes/no \n==>") == "yes":
+                save(raw_mode, messages, EOT)
+        os.system('cls')
+        print("\nSeeyou :)")
 
 
 main_app()
