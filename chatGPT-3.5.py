@@ -224,7 +224,7 @@ def save(raw_mode, messages, EOT):
     if EOT:
         print("----------\n ( 情報 ) \n ----------\nトークン数の上限に達しました。プロンプトを保存できません。printコマンドから内容の書き出しを行ってください。")
         return
-    print("会話内容をファイルにエクスポートします。次回以降にインポートすることで会話を続けることができます。\n")
+    print("カレントディレクトリに会話内容をファイルにエクスポートします。次回以降にインポートすることで会話を続けることができます。\n")
     while True:
         export_num = input("保存するスロットを選択してください。(1~3) \n ==>")
         if 1 <= int(export_num) <= 3:
@@ -522,7 +522,7 @@ def print_talk(error_openAI, error_DeepL, raw_mode, translator, messages):
     if (error_openAI or error_DeepL) is True:
         print("----------\n ( 警告 ) \n ----------\n設定が無効です。API設定を確認してください\n___________________________\n")
         return
-    print("talkフォルダーを作成し、会話内容を.txtファイル形式で保存します。\n")
+    print("カレントディレクトリにtalkフォルダーを作成し、会話内容を.txtファイル形式で保存します。\n")
     os.makedirs("talk", exist_ok=True)
     while True:
         if raw_mode is False:
@@ -601,7 +601,7 @@ def make_answer(raw_mode, translator, messages, question, using_model):
 
 def main_app():
     try:
-        print("____________________\n\nコマンドプロンプト上で簡単にChatGPTの操作ができるしトークン数の節約をしながら記憶の半永久保存も簡単にできるくん ver.7.7.0 \n\nmade_by :Dai-H15  s1f102200828@iniad.org\n____________________\n")
+        print("____________________\n\nコマンドプロンプト上で簡単にChatGPTの操作ができるしトークン数の節約をしながら記憶の半永久保存も簡単にできるくん ver.7.7.1 \n\nmade_by :Dai-H15  s1f102200828@iniad.org\n____________________\n")
 
         # 初期化
         question, messages, raw_mode, translator, error_openAI, error_DeepL, error, using_model, models, max_token, finish_reason, EOT, per_token_c, per_token_i, prompt_tokens, completion_tokens, total_m = init()
