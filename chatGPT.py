@@ -12,9 +12,9 @@ def init():  # 初期化
     raw_mode = False
     translator = deepl.Translator("any")
     error = 0
-    using_model = "gpt-3.5-turbo"
+    using_model = "gpt-4-1106-preview"
     models = []
-    max_token = 4096
+    max_token = 128000
     finish_reason = ""
     EOT = False
     per_token_c = 0
@@ -28,11 +28,11 @@ def init():  # 初期化
         print("api_keysを検出しました。APIキーを読み込みます。\n")
         translator = set_apikey()
         try:
-            openai.Model.retrieve("gpt-3.5-turbo")
-            print("openAI APIの読み込みに成功しました。gpt-3.5-turboが使用可能です。\n")
+            openai.Model.retrieve("gpt-4-1106-preview")
+            print("openAI APIの読み込みに成功しました。gpt-4-1106-preview が使用可能です。\n")
             models.append(using_model)
-            per_token_c = 0.002
-            per_token_i = 0.0015
+            per_token_c = 0.03
+            per_token_i = 0.01
             print("現在のベースURLは '{}' です\n".format(openai.api_base))
             error_openAI = False
 
@@ -390,7 +390,7 @@ def settings(error_openAI, error_DeepL, raw_mode, translator, messages, using_mo
                                 os.system('cls')
                                 print("処理が完了しました。\n__________\n使用されるモデル: "+using_model+"\n最大トークン数: "+str(max_token)+"\n会話生成時利用料金: $"+str(per_token_c)+"\nプロンプト入力時利用料金: $"+str(per_token_i)+"\n__________\nAPI設定メニューに戻ります。\n")
                                 continue
-                            except openai.error.APIConnectionError or openai.error.AuthenticationError:
+                            except (openai.error.APIConnectionError or openai.error.AuthenticationError):
                                 os.system('cls')
                                 print("エラーが発生しました。各設定、書式を確認してください。設定は変更されませんでした。\n")
                                 continue
@@ -599,9 +599,9 @@ def make_answer(raw_mode, translator, messages, question, using_model):
     return messages, finish_reason, prompt_tokens, completion_tokens
 
 
-def main_app():
+def main_app(task_num):
     try:
-        print("____________________\n\nコマンドプロンプト上で簡単にChatGPTの操作ができるしトークン数の節約をしながら記憶の半永久保存も簡単にできるくん ver.7.7.1 \n\nmade_by :Dai-H15  s1f102200828@iniad.org\n____________________\n")
+        print("____________________\n\nコマンドプロンプト上で簡単にChatGPTの操作ができるしトークン数の節約をしながら記憶の半永久保存も簡単にできるくん ver.7.7.3 \n\nmade_by :Dai-H15  s1f102200828@iniad.org\n____________________\n")
 
         # 初期化
         question, messages, raw_mode, translator, error_openAI, error_DeepL, error, using_model, models, max_token, finish_reason, EOT, per_token_c, per_token_i, prompt_tokens, completion_tokens, total_m = init()
@@ -612,7 +612,8 @@ def main_app():
 
         # 会話生成本体
         while True:
-
+            if task_num:
+                print("起動中タスク数: {}".format(task_num))
             # 条件分岐
             if raw_mode is True:
                 print_raw = "有効"
@@ -644,7 +645,6 @@ def main_app():
             # 会話内容のエクスポート
 
             elif input_type == "save":
-                
                 save(raw_mode, messages, EOT)
                 continue
                 # 会話内容を初期化
@@ -661,8 +661,7 @@ def main_app():
 
             elif input_type == "settings":
                 os.system('cls')
-                error_openAI, error_DeepL, raw_mode, translator, messages, using_model, models, max_token, per_token_c, per_token_i = settings(error_openAI, error_DeepL, raw_mode, translator, messages, using_model,
-                                                                                                                                               models, max_token, per_token_c, per_token_i)
+                error_openAI, error_DeepL, raw_mode, translator, messages, using_model, models, max_token, per_token_c, per_token_i = settings(error_openAI, error_DeepL, raw_mode, translator, messages, using_model, models, max_token, per_token_c, per_token_i)
                 continue
 
             elif input_type == "view":
@@ -701,7 +700,9 @@ def main_app():
             elif input_type == "task":
                 os.system('cls')
                 print("新規内容でタスクを起動します")
-                main_app()
+                task_num += 1
+                main_app(task_num)
+                task_num -= 1
                 os.system('cls')
                 print("終了しました。1個前のタスクに戻ります。")
                 continue
@@ -724,4 +725,4 @@ def main_app():
         print("\nSeeyou :)")
 
 
-main_app()
+main_app(task_num)
