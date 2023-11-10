@@ -132,13 +132,13 @@ def init():  # 初期化
 
 
 def export_prompt(prompt, export_ans_num):
-    with open('prompt_' + export_ans_num + '.data', 'w') as f:
+    with open('prompt_' + export_ans_num + '.data', 'w', encoding="utf-8") as f:
         json.dump(prompt, f)
 
 
 def import_prompt(num):
     if os.path.exists('prompt_' + num + '.data'):
-        with open('prompt_' + num + '.data', 'r') as f:
+        with open('prompt_' + num + '.data', 'r', encoding="utf-8") as f:
             return json.load(f)
     else:
         raise FileNotFoundError("プロンプトファイルが存在しません")
@@ -539,7 +539,7 @@ def print_talk(error_openAI, error_DeepL, raw_mode, translator, messages):
             print("ファイル名が入力されていません。\n")
         else:
 
-            with open("./talk/{}.txt".format(filename), "w") as f:
+            with open("./talk/{}.txt".format(filename), "w", encoding="utf-8") as f:
                 for message in messages:
                     print("書き込み中～\n")
                     f.write("________________________________________________________________________________________________\n")
@@ -553,7 +553,7 @@ def print_talk(error_openAI, error_DeepL, raw_mode, translator, messages):
                     f.write("\n")
                     f.write("\n\n")
 
-                print("正常に書き込みが完了しました。日本語化した場合、Shift_JISで開くと正常に閲覧できます。\n")
+                print("正常に書き込みが完了しました。\n")
                 break
 
     print("コマンド入力画面に戻ります。")
@@ -606,7 +606,8 @@ def make_answer(raw_mode, translator, messages, question, using_model):
     try:
         response = openai.chat.completions.create(
             model=using_model,
-            messages=messages
+            messages=messages,
+            max_tokens=2000
         )
     except openai.BadRequestError as e:
         print(f"----------\n ( 警告 ) \n ----------\nエラーが発生しました。モデルを変更した場合、使用許可がされていないモデルの可能性があります。APIキー、URLを変更するか、管理者に問い合わせてください。\n詳細: {e.args}")
@@ -638,7 +639,7 @@ def make_answer(raw_mode, translator, messages, question, using_model):
 
 def main_app(task_num):
     try:
-        print("____________________\n\nコマンドプロンプト上で簡単にChatGPTの操作ができるしトークン数の節約をしながら記憶の半永久保存も簡単にできるくん ver.8.1.1 \n\nmade_by :Dai-H15  s1f102200828@iniad.org\n____________________\n")
+        print("____________________\n\nコマンドプロンプト上で簡単にChatGPTの操作ができるしトークン数の節約をしながら記憶の半永久保存も簡単にできるくん ver.8.1.3 \n\nmade_by :Dai-H15  s1f102200828@iniad.org\n____________________\n")
 
         # 初期化
         question, messages, raw_mode, translator, error_openAI, error_DeepL, error, using_model, models, max_token, finish_reason, EOT, per_token_c, per_token_i, prompt_tokens, completion_tokens, total_m = init()
