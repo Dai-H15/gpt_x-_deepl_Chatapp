@@ -30,7 +30,7 @@ def init():  # 初期化
         print("api_keysを検出しました。APIキーを読み込みます。\n")
         translator = set_apikey()
         try:
-            openai.Model.retrieve("gpt-4-1106-preview")
+            openai.models.retrieve("gpt-4-1106-preview")
             print("openAI APIの読み込みに成功しました。gpt-4-1106-preview が使用可能です。\n")
             models.append(using_model)
             per_token_c = 0.03
@@ -38,7 +38,7 @@ def init():  # 初期化
             print("現在のベースURLは '{}' です\n".format(openai.api_base))
             error_openAI = False
 
-        except openai.error.AuthenticationError:
+        except openai.AuthenticationError:
             print(" ----------\n ( 警告 ) \n ----------\nエラー: openAI API設定が無効です。(AuthenticationError)\nsettingsから指定してください\n")
             print(" ----------\n ( 情報 ) \n ----------\n現在のベースURLは '{}' です\n".format(openai.api_base))
             error_openAI = True
@@ -65,7 +65,7 @@ def init():  # 初期化
             print(" ----------\n ( 警告 ) \n ----------\nエラー: DeepLにアクセスできません。接続が無効、もしくはホストがダウンしています。")
             error_DeepL = True
 
-    except openai.error.AuthenticationError:
+    except openai.AuthenticationError:
         print(" ----------\n ( 警告 ) \n ----------\nAPIキーの読み込みに失敗しました。settingsから指定してください。\n")
         print(" ----------\n ( 情報 ) \n ----------\n現在のベースURLは '{}' です\n".format(openai.api_base))
         error_openAI = True
@@ -235,13 +235,13 @@ def settings(error_openAI, error_DeepL, raw_mode, translator, messages, using_mo
             while True:
                 print("\n________________\n\nAPI設定メニュー\n\n1: openai.api_keyの変更\n2: openai.api_baseの変更\n3: 使用するモデルの変更\n4: DeepLAPIキーの変更 \nexit: 設定メニューにもどる\n")
                 try:
-                    openai.Model.retrieve(using_model)
+                    openai.models.retrieve(using_model)
                     error_openAI = False
                     print(using_model + "が使用可能です")
                 except openai.error.PermissionError:
                     error_openAI = True
                     print("openAI にアクセスできません。権限がないAPIキーです")
-                except openai.error.AuthenticationError:
+                except openai.AuthenticationError:
                     error_openAI = True
                     print("openAI にアクセスできません。無効なAPIキー、もしくはURLとの組み合わせが無効です")
                 except openai.error.InvalidRequestError:
@@ -321,7 +321,7 @@ def settings(error_openAI, error_DeepL, raw_mode, translator, messages, using_mo
                         else:
                             try:
                                 os.system('cls')
-                                openai.Model.retrieve(search_model)
+                                openai.models.retrieve(search_model)
                                 print("\n"+search_model+"は利用可能です。\n")
                                 print("リストに追加し、使用するモデルとして登録します。\n")
                                 try:
@@ -341,7 +341,7 @@ def settings(error_openAI, error_DeepL, raw_mode, translator, messages, using_mo
                                 os.system('cls')
                                 print("処理が完了しました。\n__________\n使用されるモデル: "+using_model+"\n最大トークン数: "+str(max_token)+"\n会話生成時利用料金: $"+str(per_token_c)+"\nプロンプト入力時利用料金: $"+str(per_token_i)+"\n__________\nAPI設定メニューに戻ります。\n")
                                 continue
-                            except openai.error.APIConnectionError or openai.error.AuthenticationError:
+                            except openai.error.APIConnectionError or openai.AuthenticationError:
                                 os.system('cls')
                                 print("エラーが発生しました。各設定、書式を確認してください。設定は変更されませんでした。\n")
                                 continue
@@ -517,11 +517,8 @@ def make_answer(raw_mode, translator, messages, question, using_model):
     print("ただいま考え中～\n")
     messages.append({"role": "user", "content": f"{question}"})
     try:
-        response = openai.ChatCompletion.create(
-            model=using_model,
-            messages=messages
-
-            )
+        response = openai.chat.completions.create(model=using_model,
+        messages=messages)
     except openai.error.InvalidRequestError:
         print("----------\n ( 警告 ) \n ----------\nエラーが発生しました。モデルを変更した場合、使用許可がされていないモデルの可能性があります。APIキー、URLを変更するか、管理者に問い合わせてください。\n")
         messages = messages[:-1]
