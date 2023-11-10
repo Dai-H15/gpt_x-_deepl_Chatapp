@@ -30,7 +30,7 @@ def init():  # 初期化
         translator = set_apikey()
 
         try:
-            openai.models.retrieve("gpt-4")
+            openai.models.retrieve(using_model)
             print("openAI APIの読み込みに成功しました。gpt-4-1106-preview が使用可能です。\n")
             models.append(using_model)
             per_token_c = 0.03
@@ -47,6 +47,9 @@ def init():  # 初期化
             error_openAI = True
         except openai.PermissionDeniedError:
             print(" ----------\n ( 警告 ) \n ----------\nエラー: openAI APIにアクセスできません。(PermissionDeniedError)\nsettingsから指定してください\n")
+            error_openAI = True
+        except openai.NotFoundError:
+            print(" ----------\n ( 警告 ) \n ----------\nエラー: openAI APIにアクセスできません。(NotFoundError)\nsettingsから指定してください\n")
             error_openAI = True
         try:
             translator.get_usage().character
@@ -635,7 +638,7 @@ def make_answer(raw_mode, translator, messages, question, using_model):
 
 def main_app(task_num):
     try:
-        print("____________________\n\nコマンドプロンプト上で簡単にChatGPTの操作ができるしトークン数の節約をしながら記憶の半永久保存も簡単にできるくん ver.8.1 \n\nmade_by :Dai-H15  s1f102200828@iniad.org\n____________________\n")
+        print("____________________\n\nコマンドプロンプト上で簡単にChatGPTの操作ができるしトークン数の節約をしながら記憶の半永久保存も簡単にできるくん ver.8.1.1 \n\nmade_by :Dai-H15  s1f102200828@iniad.org\n____________________\n")
 
         # 初期化
         question, messages, raw_mode, translator, error_openAI, error_DeepL, error, using_model, models, max_token, finish_reason, EOT, per_token_c, per_token_i, prompt_tokens, completion_tokens, total_m = init()
