@@ -2,6 +2,7 @@ import openai
 import json
 import os
 import deepl
+import base64
 task_num = 1
 
 
@@ -27,27 +28,25 @@ def init():  # 初期化
         from api_keys import set_apikey
         print("api_keysを検出しました。APIキーを読み込みます。\n")
         translator = set_apikey()
+
         try:
-            openai.models.retrieve("gpt-4-1106-preview")
+            openai.models.retrieve("gpt-4")
             print("openAI APIの読み込みに成功しました。gpt-4-1106-preview が使用可能です。\n")
             models.append(using_model)
             per_token_c = 0.03
             per_token_i = 0.01
-            print("現在のベースURLは '{}' です\n".format(openai.api_base))
+            print("現在のベースURLは '{}' です\n".format(openai.base_url))
             error_openAI = False
 
         except openai.AuthenticationError:
             print(" ----------\n ( 警告 ) \n ----------\nエラー: openAI API設定が無効です。(AuthenticationError)\nsettingsから指定してください\n")
-            print(" ----------\n ( 情報 ) \n ----------\n現在のベースURLは '{}' です\n".format(openai.api_base))
+            print(" ----------\n ( 情報 ) \n ----------\n現在のベースURLは '{}' です\n".format(openai.base_url))
             error_openAI = True
-        except openai.error.PermissionError:
-            print(" ----------\n ( 警告 ) \n ----------\nエラー: openAI API設定が無効です。(PermissionError)\nsettingsから指定してください\n")
-            error_openAI = True
-        except openai.error.InvalidRequestError:
-            print(" ----------\n ( 警告 ) \n ----------\nエラー: openAI API設定が無効です。(InvalidRequestError)\nsettingsから指定してください\n")
-            error_openAI = True
-        except openai.error.APIConnectionError:
+        except openai.APIConnectionError:
             print(" ----------\n ( 警告 ) \n ----------\nエラー: openAI APIにアクセスできません。(APiconnectionError)\nsettingsから指定してください\n")
+            error_openAI = True
+        except openai.PermissionDeniedError:
+            print(" ----------\n ( 警告 ) \n ----------\nエラー: openAI APIにアクセスできません。(PermissionDeniedError)\nsettingsから指定してください\n")
             error_openAI = True
         try:
             translator.get_usage().character
@@ -65,7 +64,7 @@ def init():  # 初期化
 
     except openai.AuthenticationError:
         print(" ----------\n ( 警告 ) \n ----------\nAPIキーの読み込みに失敗しました。settingsから指定してください。\n")
-        print(" ----------\n ( 情報 ) \n ----------\n現在のベースURLは '{}' です\n".format(openai.api_base))
+        print(" ----------\n ( 情報 ) \n ----------\n現在のベースURLは '{}' です\n".format(openai.base_url))
         error_openAI = True
         error_DeepL = True
     except ImportError:
@@ -247,7 +246,7 @@ def info(error_openAI, error_DeepL, translator, using_model, max_token, total_m,
         return
 
     print("処理が完了しました。\n__________\n\n使用されるモデル: "+using_model+"\n最大トークン数: "+str(max_token)+"\n会話生成時利用料金: $"+str(per_token_c)+"\nプロンプト入力時利用料金: $"+str(per_token_i)+"\n")
-    print("\n現在のベースURLは '{}' です\n".format(openai.api_base))
+    print("\n現在のベースURLは '{}' です\n".format(openai.base_url))
     print("現在消費しているトークン数：{}/{}  使用率: {} % \n".format(prompt_tokens+completion_tokens, max_token, round((prompt_tokens+completion_tokens)/max_token, 3)*100))
     print("現在の概算利用金額: ${} \n".format(total_m/1000))
     x = translator.get_usage().character
@@ -282,30 +281,25 @@ def settings(error_openAI, error_DeepL, raw_mode, translator, messages, using_mo
         elif u_type == "2":
             os.system('cls')
             while True:
-                print("\n________________\n\nAPI設定メニュー\n\n1: openai.api_keyの変更\n2: openai.api_baseの変更\n3: 使用するモデルの変更\n4: DeepLAPIキーの変更 \nexit: 設定メニューにもどる\n")
+                print("\n________________\n\nAPI設定メニュー\n\n1: openai.api_keyの変更\n2: openai.base_urlの変更\n3: 使用するモデルの変更\n4: DeepLAPIキーの変更 \nexit: 設定メニューにもどる\n")
                 try:
+
                     openai.models.retrieve(using_model)
                     error_openAI = False
                     print(using_model + "が使用可能です")
-                except openai.error.PermissionError:
-                    error_openAI = True
-                    print("openAI にアクセスできません。権限がないAPIキーです")
                 except openai.AuthenticationError:
                     error_openAI = True
                     print("openAI にアクセスできません。無効なAPIキー、もしくはURLとの組み合わせが無効です")
-                except openai.error.InvalidRequestError:
-                    error_openAI = True
-                    print("openAI にアクセスできません。不正なURL、もしくは無効なモデルが選択されています")
-                except openai.error.APIError:
+                except openai.APIError:
                     print("openAI にアクセスできません。設定されたURLから無効な応答が返されました。")
                     error_openAI = True
-                except openai.error.APIConnectionError:
+                except openai.APIConnectionError:
                     print("openAI APIにアクセスできません。(APiconnectionError) 接続が無効、もしくはホストがビジー状態です\n")
                     error_openAI = True
-                except openai.error.RateLimitError:
+                except openai.RateLimitError:
                     print("openAI APIにアクセスできません。レートリミットに達しました。しばらく待ってからやり直してください。")
                     error_openAI = True
-                print(" ----------\n ( 情報 ) \n ----------\n現在のベースURLは '{}' です\n".format(openai.api_base))
+                print(" ----------\n ( 情報 ) \n ----------\n現在のベースURLは '{}' です\n".format(openai.base_url))
                 try:
                     translator.get_usage().character
                     print("DeepLが使用可能です")
@@ -332,10 +326,10 @@ def settings(error_openAI, error_DeepL, raw_mode, translator, messages, using_mo
 
                 elif u_api == "2":
                     os.system('cls')
-                    openai_base = input("\nopenai.api_baseとして指定するURLを入力してください。\n>>> ")
-                    openai.api_base = openai_base
+                    openai_base = input("\nopenai.base_urlとして指定するURLを入力してください。\n>>> ")
+                    openai.base_url = openai_base
                     os.system('cls')
-                    print("openai.api_baseの変更に成功しました。")
+                    print("openai.base_urlの変更に成功しました。")
                     continue
 
                 elif u_api == "3":
@@ -390,11 +384,11 @@ def settings(error_openAI, error_DeepL, raw_mode, translator, messages, using_mo
                                 os.system('cls')
                                 print("処理が完了しました。\n__________\n使用されるモデル: "+using_model+"\n最大トークン数: "+str(max_token)+"\n会話生成時利用料金: $"+str(per_token_c)+"\nプロンプト入力時利用料金: $"+str(per_token_i)+"\n__________\nAPI設定メニューに戻ります。\n")
                                 continue
-                            except (openai.error.APIConnectionError or openai.AuthenticationError):
+                            except (openai.APIConnectionError or openai.AuthenticationError):
                                 os.system('cls')
                                 print("エラーが発生しました。各設定、書式を確認してください。設定は変更されませんでした。\n")
                                 continue
-                            except openai.error.InvalidRequestError:
+                            except openai.NotFoundError:
                                 os.system('cls')
                                 print("無効なモデル名です。再度入力してください。")
                                 continue
@@ -562,43 +556,86 @@ def print_talk(error_openAI, error_DeepL, raw_mode, translator, messages):
     print("コマンド入力画面に戻ります。")
 
 
+def add_picture(messages):
+    if not os.path.exists("./pict"):
+        print("フォルダが存在しません。新規作成します")
+        os.makedirs("./pict")
+    print("プロンプト内に画像を埋め込みます。画像の入力方法を選択してください\n1. ファイルから直接埋め込み\n2. URLから埋め込み")
+    user = input(">>>")
+    if user == "1":
+        print("pictフォルダーに画像を入れてください。")
+        user = input("画像ファイル名を拡張子を含めて入力してください。\n>>>")
+        try:
+            with open("./pict/"+user, "rb") as f:
+                print("ファイルを検出しました。")
+                b_pict = base64.b64encode(f.read()).decode('utf-8')
+                messages.append({
+                                    "role": "user",
+                                    "content": [
+                                        {
+                                            "type": "image_url",
+                                            "image_url": {"url": f"data:image/jpeg;base64,{b_pict}"}
+                                            }
+                                    ]}
+                                )
+                print("画像ファイルを追加しました。続けて、oneコマンド、multコマンドから質問を続けてください")
+        except FileNotFoundError:
+            print("ファイルが存在しません。ファイル名を確かめてください。")
+    elif user == "2":
+        print("画像のURL(直リンク)を入力してください。")
+        url = input(">>>")
+        messages.append({
+                                    "role": "user",
+                                    "content": [
+                                        {
+                                            "type": "image_url",
+                                            "image_url": url}
+                                    ]}
+                        )
+    else:
+        print("正しく入力してください。")
+    return messages
+
+
 def make_answer(raw_mode, translator, messages, question, using_model):
     print("ただいま考え中～\n")
     messages.append({"role": "user", "content": f"{question}"})
     try:
-        response = openai.chat.completions.create(model=using_model,
-        messages=messages)
-    except openai.error.InvalidRequestError:
-        print("----------\n ( 警告 ) \n ----------\nエラーが発生しました。モデルを変更した場合、使用許可がされていないモデルの可能性があります。APIキー、URLを変更するか、管理者に問い合わせてください。\n")
+        response = openai.chat.completions.create(
+            model=using_model,
+            messages=messages
+        )
+    except openai.BadRequestError as e:
+        print(f"----------\n ( 警告 ) \n ----------\nエラーが発生しました。モデルを変更した場合、使用許可がされていないモデルの可能性があります。APIキー、URLを変更するか、管理者に問い合わせてください。\n詳細: {e.args}")
         messages = messages[:-1]
         return messages, "", 0, 0
     if raw_mode is False:
         print("翻訳中~\n")
-        result = translator.translate_text(response['choices'][0]['message']['content'], target_lang="JA")
+        result = translator.translate_text(response.choices[0].message.content, target_lang="JA")
 
     else:
         print("----------\n ( 情報 ) \n ----------\nrawモードが有効化されています。\n")
-        result = response['choices'][0]['message']['content']
+        result = response.choices[0].message.content
 
     print("ok!")
 
-    messages.append({"role": response['choices'][0]['message']['role'], "content": response['choices'][0]['message']['content']})
+    messages.append({"role": response.choices[0].message.role, "content": response.choices[0].message.content})
 
-    finish_reason = response["choices"][0]["finish_reason"]
+    finish_reason = response.choices[0].finish_reason
 
     print("________________________________________________________________________________________________\n")
     print("A:\n", result)
 
     print("________________________________________________________________________________________________\n")
-    prompt_tokens = response["usage"]["prompt_tokens"]
-    completion_tokens = response["usage"]["completion_tokens"]
+    prompt_tokens = response.usage.prompt_tokens
+    completion_tokens = response.usage.completion_tokens
 
     return messages, finish_reason, prompt_tokens, completion_tokens
 
 
 def main_app(task_num):
     try:
-        print("____________________\n\nコマンドプロンプト上で簡単にChatGPTの操作ができるしトークン数の節約をしながら記憶の半永久保存も簡単にできるくん ver.7.7.3 \n\nmade_by :Dai-H15  s1f102200828@iniad.org\n____________________\n")
+        print("____________________\n\nコマンドプロンプト上で簡単にChatGPTの操作ができるしトークン数の節約をしながら記憶の半永久保存も簡単にできるくん ver.8.1 \n\nmade_by :Dai-H15  s1f102200828@iniad.org\n____________________\n")
 
         # 初期化
         question, messages, raw_mode, translator, error_openAI, error_DeepL, error, using_model, models, max_token, finish_reason, EOT, per_token_c, per_token_i, prompt_tokens, completion_tokens, total_m = init()
@@ -702,6 +739,9 @@ def main_app(task_num):
                 task_num -= 1
                 os.system('cls')
                 print("終了しました。1個前のタスクに戻ります。")
+                continue
+            elif input_type == "pict":
+                messages = add_picture(messages)
                 continue
 
             else:
