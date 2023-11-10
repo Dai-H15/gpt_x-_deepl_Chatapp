@@ -1,12 +1,9 @@
 import Chatlib as Ch
+init = Ch.init()
 
-
-CS = [
-    Ch.init(),
-    Ch.init(),
-    Ch.init()
-]
-
+CS = []
+for _ in range(3):
+    CS.append(init)
 
 
 
