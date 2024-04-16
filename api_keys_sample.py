@@ -1,11 +1,10 @@
 """Import libraries"""
 
-import openai
 import deepl
+from openai import OpenAI
 
 
 def set_apikey():
-    openai.api_key = "any"
-    openai.base_url = "any"
+    client = OpenAI(api_key="any", base_url="any")
     translator = deepl.Translator("any")
-    return translator
+    return translator, client
