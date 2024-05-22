@@ -14,7 +14,7 @@ def init():  # 初期化
     raw_mode = False
     translator = deepl.Translator("any")
     error = 0
-    using_model = "gpt-4"
+    using_model = "gpt-4o"
     models = []
     max_token = 128000
     finish_reason = ""
@@ -168,7 +168,7 @@ def one(error_openAI, error_DeepL, EOT, raw_mode, translator, question):
 
     else:
         if raw_mode is False:
-            question = translator.translate_text(user_question, target_lang="EN-US")
+            question = str(translator.translate_text(user_question, target_lang="EN-US"))
             print("\n言語処理が完了しました\n")
         else:
             question = user_question
@@ -624,6 +624,8 @@ def make_answer(raw_mode, translator, messages, question, using_model, client):
         result = response.choices[0].message.content
 
     print("ok!")
+    
+    question = ""
 
     messages.append({"role": response.choices[0].message.role, "content": response.choices[0].message.content})
 
