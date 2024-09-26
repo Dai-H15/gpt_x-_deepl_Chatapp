@@ -723,7 +723,7 @@ def main_app(task_num):
             elif input_type == "help":
                 os.system('cls')
                 print("コマンド  \none:一文のみ入力 \nmult:連続入力  \nsave:プロンプトをエクスポートして終了 \nnew:会話を新しくやり直す \ninfo:現在のトークン数を表示(インポート直後は無効)  ")
-                print("view:会話内容を全表示 \ntranslate:会話内容を日本語化して表示 \nexit:保存せずに終了 \nreload:アプリを再起動 \nsettings:詳細設定を表示 \nprint:テキストファイル形式で会話内容を出力\ntask: 別のタスクを起動\n")
+                print("view:会話内容を全表示 \ntranslate:会話内容を日本語化して表示 \nexit:保存せずに終了 \nreload:アプリを再起動 \nsettings:詳細設定を表示 \nprint:テキストファイル形式で会話内容を出力\ntask: 別のタスクを起動\npict: 画像を取り込み")
                 continue
 
             elif input_type == "print":
