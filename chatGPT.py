@@ -50,7 +50,7 @@ def init() -> ChatGPTBaseClass:  # 初期化
 
         except openai.AuthenticationError:
             print(" ----------\n ( 警告 ) \n ----------\nエラー: openAI API設定が無効です。(AuthenticationError)\nsettingsから指定してください\n")
-            print(" ----------\n ( 情報 ) \n ----------\n現在のベースURLは '{}' です\n".format(client.base_url))
+            print(" ----------\n ( 情報 ) \n ----------\n現在のベースURLは '{}' です\n".format(instance.client.base_url))
             instance.error_openAI = True
         except openai.APIConnectionError:
             print(" ----------\n ( 警告 ) \n ----------\nエラー: openAI APIにアクセスできません。(APiconnectionError)\nsettingsから指定してください\n")
@@ -77,7 +77,7 @@ def init() -> ChatGPTBaseClass:  # 初期化
 
     except openai.AuthenticationError:
         print(" ----------\n ( 警告 ) \n ----------\nAPIキーの読み込みに失敗しました。settingsから指定してください。\n")
-        print(" ----------\n ( 情報 ) \n ----------\n現在のベースURLは '{}' です\n".format(client.base_url))
+        print(" ----------\n ( 情報 ) \n ----------\n現在のベースURLは '{}' です\n".format(instance.client.base_url))
         instance.error_openAI = True
         instance.error_DeepL = True
     except ImportError:
