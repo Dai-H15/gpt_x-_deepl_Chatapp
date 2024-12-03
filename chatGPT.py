@@ -42,6 +42,11 @@ def init() -> ChatGPTBaseClass:  # 初期化
         try:
             instance.client.models.retrieve(instance.using_model)
             print(f"openAI APIの読み込みに成功しました。{instance.using_model} が使用可能です。\n")
+            if instance.using_model == "o1-preview":
+                for i in range(len(instance.messages) - 1, -1, -1):
+                    if instance.messages[i]["role"] == "system":
+                        del instance.messages[i]
+                        print("o1-previewはsystem roleに対応していないため、対象の会話が削除されました。")
             instance.models.append(instance.using_model)
             instance.per_token_c = 0.03
             instance.per_token_i = 0.01
@@ -259,7 +264,7 @@ def info(instance: ChatGPTBaseClass):
 def settings(instance: ChatGPTBaseClass) -> None:
     os.system('cls')
     while True:
-        print("\n________________\n\n変更する設定を選んでください\n 1.自動翻訳機能(rawモード)\n 2.API設定\n 3.初期プロンプトの指定\n exit:設定を終了\n ")
+        print("\n________________\n\n変更する設定を選んでください\n 1.自動翻訳機能(rawモード, ストリーム出力設定)\n 2.API設定\n 3.初期プロンプトの指定\n  exit:設定を終了\n ")
         u_type = input(">>>")
         if u_type == "1":
             os.system('cls')
@@ -268,12 +273,26 @@ def settings(instance: ChatGPTBaseClass) -> None:
             tra_inp = input("rawモードを有効にしますか？ yes/no : ")
             if tra_inp == "no":
                 instance.raw_mode = False
+                instance.stream = False
                 os.system('cls')
                 print("rawモードが無効化されました\n")
             elif tra_inp == "yes":
                 instance.raw_mode = True
                 os.system('cls')
+                while True:
+                    print("加えて、Stream出力の有無が設定可能です。")
+                    print("streamに対応しているモデルにおいて、出力完了を待たずに結果を随時出力することができます")
+                    stream_inp = input("stream出力を有効化しますか?: yes/no >>>")
+                    if stream_inp == "yes" or stream_inp == "y":
+                        instance.stream = True
+                        break
+                    elif stream_inp == "no" or stream_inp == "n":
+                        instance.stream = False
+                        break
+                    input("無効な入力です。 Enterを押してください")
+                    os.system("cls")
                 print("rawモードが有効化されました。トークン数にご注意ください。\n")
+                print(f"stream出力は {'有効' if instance.stream else '無効'} です")
                 print(" ----------\n ( 情報 ) \n ----------\n本設定を有効にすると、以降保存されるプロンプトも翻訳されずに追記されていくので注意してください。\n________________________________________________\n")
 
             else:
@@ -385,6 +404,11 @@ def settings(instance: ChatGPTBaseClass) -> None:
                                 instance.using_model = search_model
                                 os.system('cls')
                                 print("処理が完了しました。\n__________\n使用されるモデル: "+instance.using_model+"\n最大トークン数: "+str(instance.max_token)+"\n会話生成時利用料金: $"+str(instance.per_token_c)+"\nプロンプト入力時利用料金: $"+str(instance.per_token_i)+"\n__________\nAPI設定メニューに戻ります。\n")
+                                if instance.using_model == "o1-preview":
+                                    for i in range(len(instance.messages) - 1, -1, -1):
+                                        if instance.messages[i]["role"] == "system":
+                                            del instance.messages[i]
+                                            print("o1-previewはsystem roleに対応していないため、対象の会話が削除されました。")
                                 continue
                             except (openai.APIConnectionError, openai.AuthenticationError):
                                 os.system('cls')
@@ -464,7 +488,6 @@ def settings(instance: ChatGPTBaseClass) -> None:
             print("settingsメニューに戻ります。")
             u_prompt = ""
             continue
-
         elif u_type == "exit":
             os.system('cls')
             print("コマンド入力に戻ります。\n")
@@ -605,47 +628,54 @@ def make_answer(instance: ChatGPTBaseClass) -> None:
     print("ただいま考え中～\n")
     instance.messages.append({"role": "user", "content": f"{instance.question}"})
     try:
-        response = instance.client.chat.completions.create(
-            model=instance.using_model,
-            messages=instance.messages,
-            max_tokens=2000,
-            stream=True if instance.raw_mode else False,
-            stream_options={"include_usage": instance.raw_mode} 
-        )
+        if instance.stream:
+            response = instance.client.chat.completions.create(
+                model=instance.using_model,
+                messages=instance.messages,
+                stream=True,
+                stream_options={"include_usage": True}
+            )
+        else:
+            response = instance.client.chat.completions.create(
+                model=instance.using_model,
+                messages=instance.messages,
+            )
     except openai.BadRequestError as e:
         print(f"----------\n ( 警告 ) \n ----------\nエラーが発生しました。モデルを変更した場合、使用許可がされていないモデルの可能性があります。APIキー、URLを変更するか、管理者に問い合わせてください。\n詳細: {e.args}")
         instance.messages = instance.messages[:-1]
     if instance.raw_mode is False:
         print("翻訳中~\n")
-        result = instance.translator.translate_text(response.choices[0].message.content, target_lang="JA")
+        result = str(instance.translator.translate_text(response.choices[0].message.content, target_lang="JA"))
 
     else:
         print("----------\n ( 情報 ) \n ----------\nrawモードが有効化されています。\n")
 
     print("ok!")
-    
     instance.question = ""
     print("________________________________________________________________________________________________\n")
     if instance.raw_mode:
-        result = ""
-        for chunk in response:
-            if len(chunk.choices) > 0:
-                if chunk.choices[0].delta.content is not None:
-                    print(chunk.choices[0].delta.content, end="")
-                    result += chunk.choices[0].delta.content
-                if chunk.choices[0].finish_reason is not None:
-                    instance.finish_reason = chunk.choices[0].finish_reason
-            if chunk.usage is not None:
-                instance.prompt_tokens  += chunk.usage.prompt_tokens
-                instance.completion_tokens = chunk.usage.completion_tokens
-        print("\n")
+        if instance.stream:
+            result = ""
+            for chunk in response:
+                if len(chunk.choices) > 0:
+                    if chunk.choices[0].delta.content is not None:
+                        print(chunk.choices[0].delta.content, end="")
+                        result += chunk.choices[0].delta.content
+                    if chunk.choices[0].finish_reason is not None:
+                        instance.finish_reason = chunk.choices[0].finish_reason
+                if chunk.usage is not None:
+                    instance.prompt_tokens += chunk.usage.prompt_tokens
+                    instance.completion_tokens = chunk.usage.completion_tokens
+            print("\n")
+        else:
+            result = response.choices[0].message.content
+            print("A:\n", result)
     else:
         print("A:\n", result)
     print("________________________________________________________________________________________________\n")
 
     instance.messages.append({"role": "assistant", "content": result})
-
-    if not instance.raw_mode:
+    if not instance.stream:
         response.choices[0].finish_reason
         instance.prompt_tokens = response.usage.prompt_tokens
         instance.completion_tokens = response.usage.completion_tokens
